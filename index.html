@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Crowd Safety Monitor</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+
+<body>
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="topbar">
+
+        <div>
+
+            <h1>🛡️ Crowd Safety Monitor</h1>
+
+            <p>
+                Real-Time Crowd Monitoring Prototype
+            </p>
+
+        </div>
+
+
+        <div class="system-status">
+
+            <span class="status-dot"></span>
+
+            <span id="systemStatus">
+                SYSTEM ONLINE
+            </span>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =========================================
+         MAIN DASHBOARD
+    ========================================== -->
+
+    <main class="dashboard">
+
+
+        <!-- =====================================
+             CAMERA SECTION
+        ====================================== -->
+
+        <section class="camera-section">
+
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Live Camera Feed
+                    </h2>
+
+                    <p>
+                        Phone Camera • AI Processed Stream
+                    </p>
+
+                </div>
+
+
+                <div class="live-badge">
+
+                    <span></span>
+
+                    LIVE
+
+                </div>
+
+            </div>
+
+
+
+            <!-- CAMERA -->
+
+            <div class="camera-container">
+
+
+                <!-- IMPORTANT:
+                     This is Flask AI stream.
+                     NOT the phone directly.
+                -->
+
+                <img
+                    id="cameraFeed"
+                    src="/video_feed"
+                    alt="AI Processed Camera Feed"
+                >
+
+
+                <!-- CAMERA ERROR -->
+
+                <div
+                    id="cameraError"
+                    class="camera-error hidden"
+                >
+
+                    <div class="error-icon">
+                        📷
+                    </div>
+
+
+                    <h3>
+                        Camera Connection Lost
+                    </h3>
+
+
+                    <p>
+                        Check that your phone camera server
+                        is running.
+                    </p>
+
+
+                    <button
+                        onclick="reconnectCamera()"
+                    >
+                        Reconnect Camera
+                    </button>
+
+                </div>
+
+
+                <!-- CAMERA OVERLAY -->
+
+                <div class="camera-overlay">
+
+                    <span>
+                        📱 PHONE CAMERA
+                    </span>
+
+
+                    <span id="connectionText">
+                        CONNECTING
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =====================================
+             RIGHT SIDE STATUS
+        ====================================== -->
+
+        <section class="status-section">
+
+
+            <!-- PEOPLE -->
+
+            <div class="card people-card">
+
+                <div class="card-title">
+
+                    <span>👥</span>
+
+                    <p>
+                        People Detected
+                    </p>
+
+                </div>
+
+
+                <h2 id="peopleCount">
+                    --
+                </h2>
+
+
+                <p class="small-text">
+                    Real-time YOLO person detection
+                </p>
+
+            </div>
+
+
+
+            <!-- CROWD STATUS -->
+
+            <div class="card">
+
+                <div class="card-title">
+
+                    <span>🚦</span>
+
+                    <p>
+                        Crowd Status
+                    </p>
+
+                </div>
+
+
+                <div
+                    id="crowdStatus"
+                    class="status waiting"
+                >
+                    WAITING
+                </div>
+
+
+                <p
+                    id="crowdMessage"
+                    class="small-text"
+                >
+                    Waiting for AI data...
+                </p>
+
+            </div>
+
+
+
+            <!-- CAMERA SOURCE -->
+
+            <div class="card">
+
+                <div class="card-title">
+
+                    <span>📹</span>
+
+                    <p>
+                        Camera Source
+                    </p>
+
+                </div>
+
+
+                <h3>
+                    Phone Camera
+                </h3>
+
+
+                <p class="source-ip">
+                    192.168.137.112:8080
+                </p>
+
+            </div>
+
+
+
+            <!-- STREAM STATUS -->
+
+            <div class="card">
+
+                <div class="card-title">
+
+                    <span>📡</span>
+
+                    <p>
+                        Stream Status
+                    </p>
+
+                </div>
+
+
+                <div class="stream-status">
+
+                    <span
+                        id="streamIndicator"
+                        class="status-dot"
+                    ></span>
+
+
+                    <span id="streamStatus">
+                        CONNECTING
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =====================================
+             EVENT LOG
+        ====================================== -->
+
+        <section class="event-section">
+
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Event Log
+                    </h2>
+
+                    <p>
+                        Recent system activity
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="clear-button"
+                    onclick="clearLogs()"
+                >
+                    Clear
+                </button>
+
+            </div>
+
+
+
+            <div
+                id="eventLog"
+                class="event-log"
+            >
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer>
+
+        <p>
+            Crowd Safety Monitor • Prototype V1
+        </p>
+
+
+        <p>
+            Phone Camera → OpenCV → YOLO → Dashboard
+        </p>
+
+    </footer>
+
+
+
+    <script src="/script.js"></script>
+
+</body>
+
+</html>
