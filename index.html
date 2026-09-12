@@ -4,11 +4,9 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Crowd Safety Monitor</title>
+    <title>Crowd Safety Monitor - Heatmap & Critical Zone Risk</title>
 
     <link rel="stylesheet" href="/style.css">
 
@@ -28,7 +26,7 @@
             <h1>🛡️ Crowd Safety Monitor</h1>
 
             <p>
-                Real-Time Crowd Monitoring Prototype
+                Multi-Camera Density Heatmap & Critical Zone Risk Engine
             </p>
 
         </div>
@@ -47,6 +45,25 @@
     </header>
 
 
+    <!-- CRITICAL ZONE ALERT BANNER -->
+
+    <div id="criticalAlertBanner" class="alert-banner hidden">
+
+        <span class="alert-icon">⚠️</span>
+
+        <div>
+
+            <h3>CRITICAL CROWD DENSITY WARNING!</h3>
+
+            <p id="alertBannerText">
+                Critical threshold (>7 people) breached in camera feed zone! Immediate crowd dispersal required.
+            </p>
+
+        </div>
+
+    </div>
+
+
 
     <!-- =========================================
          MAIN DASHBOARD
@@ -56,7 +73,7 @@
 
 
         <!-- =====================================
-             CAMERA SECTION
+             DUAL CAMERA SECTION WITH HEATMAPS
         ====================================== -->
 
         <section class="camera-section">
@@ -67,11 +84,11 @@
                 <div>
 
                     <h2>
-                        Live Camera Feed
+                        Live Dual-Camera Feeds & Density Heatmaps
                     </h2>
 
                     <p>
-                        Phone Camera • AI Processed Stream
+                        YOLO Tracking • Heatmap Density Map • Zone Risk Classifier
                     </p>
 
                 </div>
@@ -81,78 +98,105 @@
 
                     <span></span>
 
-                    LIVE
+                    HEATMAP ACTIVE
 
                 </div>
 
             </div>
 
 
+            <!-- CAMERA GRID -->
 
-            <!-- CAMERA -->
+            <div class="camera-grid">
 
-            <div class="camera-container">
+                <!-- CAMERA 1 -->
 
+                <div id="cam1Box" class="camera-box">
 
-                <!-- IMPORTANT:
-                     This is Flask AI stream.
-                     NOT the phone directly.
-                -->
+                    <div class="camera-box-header">
 
-                <img
-                    id="cameraFeed"
-                    src="/video_feed"
-                    alt="AI Processed Camera Feed"
-                >
+                        <span>📷 Camera 1</span>
 
+                        <div>
+                            <span id="cam1ZoneBadge" class="badge badge-normal">SAFE ZONE</span>
+                            <span id="cam1StatusBadge" class="badge badge-offline">OFFLINE</span>
+                        </div>
 
-                <!-- CAMERA ERROR -->
-
-                <div
-                    id="cameraError"
-                    class="camera-error hidden"
-                >
-
-                    <div class="error-icon">
-                        📷
                     </div>
 
+                    <div class="camera-container">
 
-                    <h3>
-                        Camera Connection Lost
-                    </h3>
+                        <img
+                            id="cameraFeed1"
+                            src="/video_feed/cam1"
+                            alt="Camera 1 Heatmap & AI Feed"
+                        >
 
+                        <div class="camera-overlay">
 
-                    <p>
-                        Check that your phone camera server
-                        is running.
-                    </p>
+                            <span>
+                                📱 192.168.137.125:8080
+                            </span>
 
+                            <span id="cam1ConnectionText">
+                                CONNECTING
+                            </span>
 
-                    <button
-                        onclick="reconnectCamera()"
-                    >
-                        Reconnect Camera
-                    </button>
+                        </div>
 
-                </div>
+                    </div>
 
-
-                <!-- CAMERA OVERLAY -->
-
-                <div class="camera-overlay">
-
-                    <span>
-                        📱 PHONE CAMERA
-                    </span>
-
-
-                    <span id="connectionText">
-                        CONNECTING
-                    </span>
+                    <div class="camera-box-footer">
+                        <span>People: <strong id="cam1Count">0</strong></span>
+                        <span class="small-text">Zone Risk: <span id="cam1ZoneText" class="risk-safe">SAFE (≤3)</span></span>
+                    </div>
 
                 </div>
 
+
+                <!-- CAMERA 2 -->
+
+                <div id="cam2Box" class="camera-box">
+
+                    <div class="camera-box-header">
+
+                        <span>📷 Camera 2</span>
+
+                        <div>
+                            <span id="cam2ZoneBadge" class="badge badge-normal">SAFE ZONE</span>
+                            <span id="cam2StatusBadge" class="badge badge-offline">OFFLINE</span>
+                        </div>
+
+                    </div>
+
+                    <div class="camera-container">
+
+                        <img
+                            id="cameraFeed2"
+                            src="/video_feed/cam2"
+                            alt="Camera 2 Heatmap & AI Feed"
+                        >
+
+                        <div class="camera-overlay">
+
+                            <span>
+                                📱 192.168.137.60:8080
+                            </span>
+
+                            <span id="cam2ConnectionText">
+                                CONNECTING
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="camera-box-footer">
+                        <span>People: <strong id="cam2Count">0</strong></span>
+                        <span class="small-text">Zone Risk: <span id="cam2ZoneText" class="risk-safe">SAFE (≤3)</span></span>
+                    </div>
+
+                </div>
 
             </div>
 
@@ -162,13 +206,13 @@
 
 
         <!-- =====================================
-             RIGHT SIDE STATUS
+             RIGHT SIDE STATUS & RISK ANALYTICS
         ====================================== -->
 
         <section class="status-section">
 
 
-            <!-- PEOPLE -->
+            <!-- TOTAL PEOPLE -->
 
             <div class="card people-card">
 
@@ -177,26 +221,31 @@
                     <span>👥</span>
 
                     <p>
-                        People Detected
+                        Deduplicated Total Count
                     </p>
 
                 </div>
 
 
-                <h2 id="peopleCount">
-                    --
+                <h2 id="totalPeopleCount">
+                    0
                 </h2>
 
 
+                <div class="count-breakdown">
+                    <div class="pill">Cam 1: <span id="breakdownCam1">0</span></div>
+                    <div class="pill">Cam 2: <span id="breakdownCam2">0</span></div>
+                </div>
+
                 <p class="small-text">
-                    Real-time YOLO person detection
+                    Unique tracked person identities
                 </p>
 
             </div>
 
 
 
-            <!-- CROWD STATUS -->
+            <!-- OVERALL CROWD STATUS -->
 
             <div class="card">
 
@@ -205,7 +254,7 @@
                     <span>🚦</span>
 
                     <p>
-                        Crowd Status
+                        Crowd Risk Level
                     </p>
 
                 </div>
@@ -223,14 +272,49 @@
                     id="crowdMessage"
                     class="small-text"
                 >
-                    Waiting for AI data...
+                    Waiting for AI density analysis...
                 </p>
 
             </div>
 
 
 
-            <!-- CAMERA SOURCE -->
+            <!-- ZONE RULE THRESHOLDS LEGEND -->
+
+            <div class="card">
+
+                <div class="card-title">
+
+                    <span>🎯</span>
+
+                    <p>
+                        Zone Risk Rules
+                    </p>
+
+                </div>
+
+
+                <div class="zone-rules">
+
+                    <div class="rule-item green">
+                        <span>● Safe Zone:</span> ≤ 3 People
+                    </div>
+
+                    <div class="rule-item orange">
+                        <span>● Warning Zone:</span> > 3 People
+                    </div>
+
+                    <div class="rule-item red">
+                        <span>● Critical Zone:</span> > 7 People
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- CAMERA SOURCES SUMMARY -->
 
             <div class="card">
 
@@ -239,52 +323,19 @@
                     <span>📹</span>
 
                     <p>
-                        Camera Source
+                        Active Camera Feeds
                     </p>
 
                 </div>
 
 
-                <h3>
-                    Phone Camera
-                </h3>
-
-
-                <p class="source-ip">
-                    192.168.137.112:8080
-                </p>
-
-            </div>
-
-
-
-            <!-- STREAM STATUS -->
-
-            <div class="card">
-
-                <div class="card-title">
-
-                    <span>📡</span>
-
-                    <p>
-                        Stream Status
-                    </p>
-
-                </div>
-
-
-                <div class="stream-status">
-
-                    <span
-                        id="streamIndicator"
-                        class="status-dot"
-                    ></span>
-
-
-                    <span id="streamStatus">
-                        CONNECTING
-                    </span>
-
+                <div class="cam-summary">
+                    <div class="cam-item">
+                        <strong>Camera 1:</strong> 192.168.137.125
+                    </div>
+                    <div class="cam-item">
+                        <strong>Camera 2:</strong> 192.168.137.60
+                    </div>
                 </div>
 
             </div>
@@ -306,11 +357,11 @@
                 <div>
 
                     <h2>
-                        Event Log
+                        Event Log & Zone Alerts
                     </h2>
 
                     <p>
-                        Recent system activity
+                        Real-time safety events and zone threshold breaches
                     </p>
 
                 </div>
@@ -320,7 +371,7 @@
                     class="clear-button"
                     onclick="clearLogs()"
                 >
-                    Clear
+                    Clear Log
                 </button>
 
             </div>
@@ -349,12 +400,11 @@
     <footer>
 
         <p>
-            Crowd Safety Monitor • Prototype V1
+            Crowd Safety Monitor • Phase 3 Prototype
         </p>
 
-
         <p>
-            Phone Camera → OpenCV → YOLO → Dashboard
+            Dual Phone Cameras → Gaussian Density Heatmap → YOLO Deduplication → Critical Zone Alerts
         </p>
 
     </footer>

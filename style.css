@@ -116,12 +116,158 @@ body {
 
 .camera-section {
     background: #111827;
-
     border: 1px solid #263244;
-
     border-radius: 12px;
-
     padding: 20px;
+}
+
+.camera-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.camera-box {
+    background: #0b1120;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.camera-box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.camera-box-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.camera-box-footer strong {
+    color: #22c55e;
+    font-size: 14px;
+}
+
+/* ================================
+   CRITICAL ALERT BANNER
+================================ */
+
+.alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: linear-gradient(90deg, #7f1d1d, #991b1b);
+    border: 2px solid #ef4444;
+    border-radius: 10px;
+    padding: 15px 25px;
+    margin: 20px auto 0 auto;
+    max-width: 1500px;
+    color: #fef2f2;
+    animation: alertPulse 1.5s infinite alternate;
+}
+
+@keyframes alertPulse {
+    0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+    100% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.9); }
+}
+
+.alert-icon {
+    font-size: 32px;
+}
+
+.alert-banner h3 {
+    font-size: 16px;
+    margin-bottom: 3px;
+    color: #ffffff;
+}
+
+.alert-banner p {
+    font-size: 13px;
+    color: #fca5a5;
+}
+
+/* ================================
+   ZONE RISK BADGES & RULES
+================================ */
+
+.badge-normal {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid #22c55e;
+}
+
+.badge-warning {
+    background: rgba(249, 115, 22, 0.2);
+    color: #f97316;
+    border: 1px solid #f97316;
+}
+
+.badge-critical {
+    background: rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    animation: alertPulse 1s infinite alternate;
+}
+
+.risk-safe { color: #22c55e; font-weight: bold; }
+.risk-warning { color: #f97316; font-weight: bold; }
+.risk-critical { color: #ef4444; font-weight: bold; }
+
+.zone-rules {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.rule-item {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.rule-item.green span { color: #22c55e; font-weight: bold; }
+.rule-item.orange span { color: #f97316; font-weight: bold; }
+.rule-item.red span { color: #ef4444; font-weight: bold; }
+
+.cam-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.cam-item strong {
+    color: #60a5fa;
+}
+
+.count-breakdown {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.pill {
+    background: #1e293b;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.pill span {
+    color: #38bdf8;
+    font-weight: bold;
 }
 
 .camera-container {
