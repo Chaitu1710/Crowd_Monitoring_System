@@ -16,14 +16,8 @@ CAMERAS = {
     "cam1": {
         "id": "cam1",
         "name": "Camera 1",
-        "url": os.environ.get("CAM1_URL", "http://192.168.137.125:8080/video"),
-        "ip": "192.168.137.125:8080"
-    },
-    "cam2": {
-        "id": "cam2",
-        "name": "Camera 2",
-        "url": os.environ.get("CAM2_URL", "http://192.168.137.60:8080/video"),
-        "ip": "192.168.137.60:8080"
+        "url": "http://192.168.137.99:8080/video",
+        "ip": "192.168.137.99:8080"
     }
 }
 
@@ -209,7 +203,73 @@ def javascript():
 
 
 # ==================================================
-# AI CAMERA LOOP WITH TRACKING & DENSITY HEATMAP
+# ASYNCHRONOUS CAMERA FRAME READER
+# ==================================================
+
+class IPCameraCapture:
+    """
+    Asynchronous Threaded Camera Frame Reader.
+    Prevents network buffer backlog and frame drop/disconnect issues
+    when processing IP MJPEG streams with YOLO models.
+    """
+    def __init__(self, url):
+        self.url = url
+        self.cap = None
+        self.current_frame = None
+        self.connected = False
+        self.running = True
+        self.lock = threading.Lock()
+        self.thread = threading.Thread(target=self._update, daemon=True)
+        self.thread.start()
+
+    def _update(self):
+        while self.running:
+            if self.cap is None or not self.cap.isOpened():
+                with self.lock:
+                    self.connected = False
+
+                target_url = self.url
+                if isinstance(target_url, str) and target_url.isdigit():
+                    target_url = int(target_url)
+                elif isinstance(target_url, str) and target_url.startswith("http") and not target_url.endswith(("/video", ".mjpg", ".jpg", "/videofeed")):
+                    target_url = target_url.rstrip("/") + "/video"
+
+                print(f"[CameraReader] Opening stream: {target_url}...")
+                try:
+                    self.cap = cv2.VideoCapture(target_url)
+                    self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                except Exception as e:
+                    print(f"[CameraReader] Connection error: {e}")
+                    self.cap = None
+
+                if self.cap is None or not self.cap.isOpened():
+                    time.sleep(2)
+                    continue
+
+                print(f"[CameraReader] Stream connected: {target_url}")
+
+            ret, frame = self.cap.read()
+            if ret and frame is not None and frame.size > 0:
+                with self.lock:
+                    self.current_frame = frame
+                    self.connected = True
+            else:
+                with self.lock:
+                    self.connected = False
+                if self.cap:
+                    self.cap.release()
+                self.cap = None
+                time.sleep(0.5)
+
+    def read(self):
+        with self.lock:
+            if self.connected and self.current_frame is not None:
+                return True, self.current_frame.copy()
+            return False, None
+
+
+# ==================================================
+# AI CAMERA LOOP WITH DENSITY HEATMAP & RISK ANALYSIS
 # ==================================================
 
 def ai_camera_loop(cam_id):
@@ -223,58 +283,23 @@ def ai_camera_loop(cam_id):
     cam_name = cam_config["name"]
     cam_url = cam_config["url"]
 
-    frame_number = 0
-    camera = None
-
     print(f"[{cam_name}] Worker thread initialized for URL: {cam_url}")
+    cam_reader = IPCameraCapture(cam_url)
+
+    frame_number = 0
 
     while True:
 
-        if camera is None or not camera.isOpened() or not camera_connected[cam_id]:
+        success, frame = cam_reader.read()
 
-            print(f"[{cam_name}] Connecting to {cam_url}...")
-
-            if camera is not None:
-                camera.release()
-
-            camera = cv2.VideoCapture(cam_url)
-            camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-            if not camera.isOpened():
-
-                print(f"[{cam_name}] Failed to open stream. Retrying in 3s...")
-
-                with frame_lock:
-                    camera_connected[cam_id] = False
-                    people_counts[cam_id] = 0
-                    active_track_ids[cam_id] = set()
-                    latest_frames[cam_id] = None
-
-                time.sleep(3)
-                continue
-
-            print(f"[{cam_name}] Stream connected successfully!")
-
-            with frame_lock:
-                camera_connected[cam_id] = True
-
-        success, frame = camera.read()
-
-        if not success:
-
-            print(f"[{cam_name}] Frame read failed. Retrying connection...")
-
+        if not success or frame is None:
             with frame_lock:
                 camera_connected[cam_id] = False
                 people_counts[cam_id] = 0
                 active_track_ids[cam_id] = set()
                 latest_frames[cam_id] = None
 
-            if camera is not None:
-                camera.release()
-
-            camera = None
-            time.sleep(1.5)
+            time.sleep(0.1)
             continue
 
         with frame_lock:
@@ -287,81 +312,76 @@ def ai_camera_loop(cam_id):
         current_tracks = set()
 
         # ==================================================
-        # RUN YOLO + TRACKING EVERY Nth FRAME
+        # RUN YOLO DETECTION (Resized for high FPS)
         # ==================================================
 
-        if frame_number % PROCESS_EVERY == 0:
+        h_orig, w_orig = frame.shape[:2]
+        small_frame = cv2.resize(frame, (960, 540))
 
-            small_frame = cv2.resize(frame, (960, 540))
+        results = model(
+            source=small_frame,
+            conf=CONFIDENCE,
+            imgsz=640,
+            verbose=False
+        )
 
-            # Use YOLO track mode for object deduplication across frames
-            results = model.track(
-                source=small_frame,
-                conf=CONFIDENCE,
-                imgsz=640,
-                persist=True,
-                verbose=False
-            )
+        for result in results:
 
-            for result in results:
+            if result.boxes is None:
+                continue
 
-                if result.boxes is None:
+            boxes = result.boxes
+
+            for i, box in enumerate(boxes):
+
+                class_id = int(box.cls[0])
+                confidence = float(box.conf[0])
+
+                # Person class only (COCO class 0)
+                if class_id != 0:
                     continue
 
-                boxes = result.boxes
+                current_count += 1
+                track_id = int(box.id[0]) if (box.id is not None and len(box.id) > 0) else i + 1
+                current_tracks.add(track_id)
 
-                for i, box in enumerate(boxes):
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                    class_id = int(box.cls[0])
-                    confidence = float(box.conf[0])
+                scale_x = w_orig / 960
+                scale_y = h_orig / 540
 
-                    # Person class only (COCO class 0)
-                    if class_id != 0:
-                        continue
+                x1 = int(x1 * scale_x)
+                y1 = int(y1 * scale_y)
+                x2 = int(x2 * scale_x)
+                y2 = int(y2 * scale_y)
 
-                    current_count += 1
+                # Compute Centroid for Heatmap
+                cx = (x1 + x2) // 2
+                cy = (y1 + y2) // 2
+                centroids.append((cx, cy))
 
-                    # Extract Track ID if available
-                    track_id = int(box.id[0]) if box.id is not None else i + 1
-                    current_tracks.add(track_id)
+                # Bounding box color based on person density count
+                _, risk_color, _ = classify_zone_risk(current_count)
 
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                # Draw Box & Centroid Dot
+                cv2.rectangle(frame, (x1, y1), (x2, y2), risk_color, 2)
+                cv2.circle(frame, (cx, cy), 5, (0, 255, 255), -1)
 
-                    scale_x = frame.shape[1] / 960
-                    scale_y = frame.shape[0] / 540
+                # Label
+                label = f"Person #{track_id} ({confidence:.2f})"
+                cv2.putText(
+                    frame,
+                    label,
+                    (x1, max(y1 - 10, 25)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    risk_color,
+                    2
+                )
 
-                    x1 = int(x1 * scale_x)
-                    y1 = int(y1 * scale_y)
-                    x2 = int(x2 * scale_x)
-                    y2 = int(y2 * scale_y)
-
-                    # Compute Centroid for Heatmap
-                    cx = (x1 + x2) // 2
-                    cy = (y1 + y2) // 2
-                    centroids.append((cx, cy))
-
-                    # Bounding box color based on person density count
-                    _, risk_color, _ = classify_zone_risk(current_count)
-
-                    # Draw Box & Centroid Dot
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), risk_color, 2)
-                    cv2.circle(frame, (cx, cy), 5, (0, 255, 255), -1)
-
-                    # Label with persistent Track ID
-                    label = f"ID #{track_id} ({confidence:.2f})"
-                    cv2.putText(
-                        frame,
-                        label,
-                        (x1, max(y1 - 10, 25)),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6,
-                        risk_color,
-                        2
-                    )
-
-            with frame_lock:
-                people_counts[cam_id] = current_count
-                active_track_ids[cam_id] = current_tracks
+        with frame_lock:
+            people_counts[cam_id] = current_count
+            active_track_ids[cam_id] = current_tracks
 
         # ==================================================
         # DENSITY HEATMAP OVERLAY
@@ -418,11 +438,8 @@ def ai_camera_loop(cam_id):
             with frame_lock:
                 latest_frames[cam_id] = buffer.tobytes()
 
-    if camera is not None:
-        camera.release()
+        time.sleep(0.01)
 
-    with frame_lock:
-        camera_connected[cam_id] = False
 
 
 # ==================================================
