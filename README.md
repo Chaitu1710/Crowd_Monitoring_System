@@ -148,7 +148,7 @@ CAMERAS = {
     "cam1": {
         "id": "cam1",
         "name": "Camera 1 (Entrance Zone)",
-        "url": "http://192.168.137.125:8080/video",
+        "url": "http://10.209.7.208:8080/video",
         "ip": "192.168.137.125:8080"
     },
     "cam2": {
