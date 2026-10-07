@@ -165,8 +165,14 @@ CAMERAS = {
 python app.py
 ```
 
-### 6. Open Control Dashboard
-Navigate to `http://localhost:5000` in your web browser.
+### 6. Authentication & Roles
+
+When accessing `http://localhost:5000/`, you are greeted by the secure **Login Portal**:
+
+| Role | Username | Password | Access Level |
+| :--- | :--- | :--- | :--- |
+| **👑 Admin** | `admin` | `admin123` | **Full Admin Portal**: Add/delete cameras dynamically, tune thresholds & YOLO confidence, manage sirens, view server telemetry & incident archives. |
+| **👮 Operator** | `operator` | `operator123` | **Live Operator Dashboard**: Real-time dual camera feeds, individual crowd counts, red alert zone borders, and real-time safety event logs. |
 
 ---
 
@@ -175,21 +181,23 @@ Navigate to `http://localhost:5000` in your web browser.
 ```
 Crowd_Monitoring_System/
 │
-├── config.py                 # Central configuration (camera streams, YOLO hyperparams, zone thresholds)
-├── app.py                    # Main Flask application, OpenCV streaming workers & YOLO inference engine
+├── config.py                 # Central configuration (camera streams, user accounts, safety thresholds)
+├── app.py                    # Main Flask application with auth, OpenCV streaming workers & YOLO engine
 ├── requirements.txt          # Python project dependencies
 ├── yolo11n.pt                # YOLOv11 deep learning model weights
 │
 ├── templates/
-│   └── index.html            # Main web dashboard interface (modern dark glassmorphism layout)
+│   ├── login.html            # Role-based login portal with quick-fill cards
+│   ├── admin.html            # Comprehensive Admin Control Portal (cameras, rules, AI tuning, telemetry)
+│   └── index.html            # Live Operator dashboard (camera feeds, individual counts, red border alert)
 │
 ├── static/
 │   ├── css/
-│   │   └── style.css         # Styling, layout, glowing red alert animations & card designs
+│   │   └── style.css         # Modern dark theme styles, animations, glowing red alerts & card styling
 │   └── js/
-│       └── script.js         # Real-time polling, live clock, alert triggers & event log table renderer
+│       └── script.js         # Client-side dynamic updates, clock, API polling & event logging
 │
-└── README.md                 # Complete project documentation and guide
+└── README.md                 # Project documentation and guide
 ```
 
 ---

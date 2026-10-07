@@ -3,22 +3,40 @@
 CROWD SAFETY MONITOR - CONFIGURATION
 ==================================================
 Defines camera sources, AI model hyperparameters,
-and crowd density safety thresholds.
+crowd density safety thresholds, and user accounts.
 """
 
-# Active Camera Streams
+# User Accounts & Role-Based Access Control
+USERS = {
+    "admin": {
+        "password": "admin123",
+        "role": "admin",
+        "name": "System Administrator"
+    },
+    "operator": {
+        "password": "operator123",
+        "role": "operator",
+        "name": "Control Room Operator"
+    }
+}
+
+SECRET_KEY = "crowd-safety-monitoring-secret-key-2026"
+
+# Active Camera Streams (Default dictionary, can be dynamically managed via Admin Portal)
 CAMERAS = {
     "cam1": {
         "id": "cam1",
         "name": "Camera 1",
-        "url": "http://100.70.115.163:8080/video",
-        "ip": "100.70.115.163:8080"
+        "url": "http://192.168.41.170:8080/video",
+        "ip": "192.168.41.170:8080",
+        "enabled": True
     },
     "cam2": {
         "id": "cam2",
         "name": "Camera 2",
-        "url": "http://192.168.137.209:8080/video",
-        "ip": "192.168.137.209:8080"
+        "url": "http://192.168.38.250:8080/video",
+        "ip": "192.168.38.250:8080",
+        "enabled": True
     }
 }
 
