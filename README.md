@@ -171,7 +171,7 @@ When accessing `http://localhost:5000/`, you are greeted by the secure **Login P
 
 | Role | Username | Password | Access Level |
 | :--- | :--- | :--- | :--- |
-| **👑 Admin** | `admin` | `admin123` | **Full Admin Portal**: Add/delete cameras dynamically, tune safety thresholds, manage sirens & alerts, and view incident archives. |
+| **👑 Admin** | `admin` | `admin123` | **Full Admin Portal**: Add/delete cameras dynamically, configure zone safety thresholds, and view recorded incident logs. |
 | **👮 Operator** | `operator` | `operator123` | **Live Operator Dashboard**: Real-time dual camera feeds, individual crowd counts, red alert zone borders, and real-time safety event logs. |
 
 ---
@@ -188,7 +188,7 @@ Crowd_Monitoring_System/
 │
 ├── templates/
 │   ├── login.html            # Role-based login portal with quick-fill cards
-│   ├── admin.html            # Comprehensive Admin Control Portal (cameras, safety rules, alerts, incidents)
+│   ├── admin.html            # Comprehensive Admin Control Portal (cameras, safety rules, incident history)
 │   └── index.html            # Live Operator dashboard (camera feeds, individual counts, red border alert)
 │
 ├── static/

@@ -718,19 +718,6 @@
                 </div>
             </div>
 
-            <div class="kpi-card">
-                <div class="kpi-meta">
-                    <span class="kpi-label">Alarm & Dispatch System</span>
-                    <strong class="kpi-value" style="color: #fbbf24;">ARMED & READY</strong>
-                    <span class="kpi-sub">Audio siren & visual alert broadcast</span>
-                </div>
-                <div class="kpi-icon-box amber">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                </div>
-            </div>
         </div>
 
         <!-- NAVIGATION TABS -->
@@ -740,9 +727,6 @@
             </button>
             <button class="tab-btn" data-tab="rulesTab" onclick="switchTab('rulesTab', this)">
                 🎯 Safety Thresholds
-            </button>
-            <button class="tab-btn" data-tab="alarmsTab" onclick="switchTab('alarmsTab', this)">
-                🚨 Alarm & Siren Settings
             </button>
             <button class="tab-btn" data-tab="incidentsTab" onclick="switchTab('incidentsTab', this)">
                 📊 Surge Incident History
@@ -894,49 +878,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: ALARMS & SIRENS -->
-        <div id="alarmsTab" class="tab-pane">
-            <div class="module-card">
-                <div class="module-header">
-                    <div class="module-title-group">
-                        <div class="header-icon-square">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2>Audible Alarms & Emergency Dispatch</h2>
-                            <p>Configure automated browser sirens and notifications triggered upon critical surge</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="grid-form">
-                    <div class="form-field">
-                        <label>Browser Audio Siren on Critical Surge</label>
-                        <select id="sirenToggle" class="admin-input">
-                            <option value="enabled" selected>Enabled (Audible Warning Beep)</option>
-                            <option value="disabled">Disabled (Silent Visual Alerts Only)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-field">
-                        <label>Emergency Dispatch Webhook / SMS Alert Target</label>
-                        <input type="text" id="webhookTarget" class="admin-input" placeholder="https://api.telegram.org/bot... or +91-XXXXXXXXXX" value="+91-ControlRoom-Hotline">
-                    </div>
-                </div>
-
-                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
-                    <button type="button" class="btn-secondary" onclick="testAudioAlert()">
-                        🔊 Test Siren Sound
-                    </button>
-                    <button type="button" class="btn-primary" onclick="showToast('Emergency alarm settings saved successfully!')">
-                        Save Alarm Settings
-                    </button>
-                </div>
-            </div>
-        </div>
 
         <!-- TAB 4: INCIDENT HISTORY -->
         <div id="incidentsTab" class="tab-pane">
@@ -1152,25 +1094,7 @@
             }
         }
 
-        function testAudioAlert() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(800, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.35);
-                gain.gain.setValueAtTime(0.35, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.35);
-                showToast('🔊 Audio alert siren test played.');
-            } catch (err) {
-                alert('AudioContext not allowed or not supported.');
-            }
-        }
+
 
         function exportIncidentLog() {
             const incidents = [
