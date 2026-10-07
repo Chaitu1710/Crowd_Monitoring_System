@@ -176,32 +176,36 @@ Navigate to `http://localhost:5000` in your web browser.
 | :--- | :--- | :--- |
 | `/` | `GET` | Serves the central police dashboard UI. |
 | `/video_feed/<cam_id>` | `GET` | Live MJPEG stream with AI bounding boxes, track IDs, and density heatmap. |
-| `/people` | `GET` | Returns JSON payload with total deduplicated counts, per-camera counts, and zone risks. |
+| `/people` | `GET` | Returns JSON payload with individual camera real-time counts, zone risk levels, and per-camera alerts. |
 | `/health` | `GET` | System health status and active camera count. |
 
 ### Sample `/people` JSON Output:
 ```json
 {
-  "total_count": 12,
   "status": "CRITICAL",
   "critical_zone_active": true,
   "warning_zone_active": true,
+  "alert_cameras": ["Camera 1", "Camera 2"],
   "cameras": {
     "cam1": {
       "name": "Camera 1",
-      "ip": "192.168.137.125:8080",
+      "ip": "100.70.115.163:8080",
       "count": 4,
       "zone_risk": "RED ZONE (>3)",
       "risk_level": "WARNING",
-      "connected": true
+      "connected": true,
+      "has_alert": true,
+      "alert_message": "High crowd detected at Camera 1 (4 people)"
     },
     "cam2": {
       "name": "Camera 2",
-      "ip": "192.168.137.60:8080",
+      "ip": "192.168.137.209:8080",
       "count": 8,
       "zone_risk": "CRITICAL ZONE (>7)",
       "risk_level": "CRITICAL",
-      "connected": true
+      "connected": true,
+      "has_alert": true,
+      "alert_message": "High crowd detected at Camera 2 (8 people)"
     }
   },
   "timestamp": 1789177500.12

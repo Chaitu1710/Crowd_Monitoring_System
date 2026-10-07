@@ -129,18 +129,149 @@ body {
 
 .camera-box {
     background: #0b1120;
-    border: 1px solid #1e293b;
-    border-radius: 8px;
-    padding: 12px;
+    border: 2px solid #1e293b;
+    border-radius: 10px;
+    padding: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Red Border Alert on Camera Box */
+.camera-box.camera-box-alert {
+    border: 3px solid #ef4444 !important;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.8), inset 0 0 12px rgba(239, 68, 68, 0.25) !important;
+    animation: cameraAlertPulse 1.2s infinite alternate !important;
+}
+
+@keyframes cameraAlertPulse {
+    0% {
+        border-color: #ef4444;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), inset 0 0 8px rgba(239, 68, 68, 0.15);
+    }
+    100% {
+        border-color: #ff1e1e;
+        box-shadow: 0 0 35px rgba(255, 30, 30, 1), inset 0 0 20px rgba(255, 30, 30, 0.35);
+    }
+}
+
+.cam-box-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.header-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .camera-box-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-size: 13px;
     font-weight: bold;
+}
+
+/* Real-Time People Count Bar Directly Below Camera Feed */
+.camera-count-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0d1527;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    transition: all 0.3s ease;
+}
+
+.camera-box-alert .camera-count-bar {
+    background: #1a0f14;
+    border-color: #7f1d1d;
+}
+
+.count-display {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.count-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.count-value {
+    font-size: 30px;
+    font-weight: 800;
+    color: #22c55e;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1;
+    transition: color 0.3s ease;
+}
+
+.count-unit {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.camera-box-alert .count-value {
+    color: #ef4444;
+}
+
+.camera-risk-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.risk-label {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* In-Camera Location Alert Banner */
+.cam-alert-box {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: linear-gradient(90deg, rgba(185, 28, 28, 0.9), rgba(153, 27, 27, 0.9));
+    border: 1px solid #ef4444;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    animation: alertTagGlow 1s infinite alternate;
+}
+
+@keyframes alertTagGlow {
+    0% {
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 22px rgba(239, 68, 68, 0.95);
+    }
+}
+
+.cam-alert-icon {
+    font-size: 18px;
+    animation: bounceAlert 1s infinite alternate;
+}
+
+@keyframes bounceAlert {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.2); }
 }
 
 .camera-box-footer {
@@ -447,6 +578,46 @@ body {
     font-size: 42px;
 
     margin-top: 15px;
+}
+
+/* Individual Camera Stat Cards */
+.card.cam-stat-card {
+    transition: all 0.3s ease;
+}
+
+.cam-stat-number {
+    font-size: 42px;
+    font-weight: 800;
+    color: #22c55e;
+    font-family: 'Courier New', Courier, monospace;
+    margin-top: 10px;
+    line-height: 1;
+    transition: color 0.3s ease;
+}
+
+.card-status-bar {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.card.cam-stat-card.card-alert {
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+    animation: cardAlertGlow 1.2s infinite alternate;
+}
+
+.card.cam-stat-card.card-alert .cam-stat-number {
+    color: #ef4444 !important;
+}
+
+@keyframes cardAlertGlow {
+    0% {
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 22px rgba(239, 68, 68, 0.9);
+    }
 }
 
 .card h3 {

@@ -47,16 +47,18 @@
 
     <!-- CRITICAL ZONE ALERT BANNER -->
 
+    <!-- CRITICAL / HIGH CROWD ALERT BANNER -->
+
     <div id="criticalAlertBanner" class="alert-banner hidden">
 
-        <span class="alert-icon">⚠️</span>
+        <span class="alert-icon">🚨</span>
 
         <div>
 
-            <h3>CRITICAL CROWD DENSITY WARNING!</h3>
+            <h3 id="alertBannerTitle">HIGH CROWD DENSITY ALERT!</h3>
 
             <p id="alertBannerText">
-                Critical threshold (>7 people) breached in camera feed zone! Immediate crowd dispersal required.
+                Alert: High crowd density detected! Immediate attention required.
             </p>
 
         </div>
@@ -88,7 +90,7 @@
                     </h2>
 
                     <p>
-                        YOLO Tracking • Heatmap Density Map • Zone Risk Classifier
+                        YOLO Tracking • Heatmap Density Map • Real-Time Individual Camera Analysis
                     </p>
 
                 </div>
@@ -115,9 +117,9 @@
 
                     <div class="camera-box-header">
 
-                        <span>📷 Camera 1</span>
+                        <span class="cam-box-title">📷 Camera 1</span>
 
-                        <div>
+                        <div class="header-badges">
                             <span id="cam1ZoneBadge" class="badge badge-normal">SAFE ZONE</span>
                             <span id="cam1StatusBadge" class="badge badge-offline">OFFLINE</span>
                         </div>
@@ -130,8 +132,8 @@
 
                         <div class="camera-overlay">
 
-                            <span>
-                                📱 192.168.137.95:8080
+                            <span id="cam1IpText">
+                                📱 100.70.115.163:8080
                             </span>
 
                             <span id="cam1ConnectionText">
@@ -142,10 +144,23 @@
 
                     </div>
 
-                    <div class="camera-box-footer">
-                        <span>People: <strong id="cam1Count">0</strong></span>
-                        <span class="small-text">Zone Risk: <span id="cam1ZoneText" class="risk-safe">SAFE
-                                (≤3)</span></span>
+                    <!-- REAL-TIME PEOPLE COUNT BELOW CAMERA FEED -->
+                    <div class="camera-count-bar">
+                        <div class="count-display">
+                            <span class="count-label">Real-Time Count:</span>
+                            <strong id="cam1Count" class="count-value">0</strong>
+                            <span class="count-unit">People</span>
+                        </div>
+                        <div class="camera-risk-info">
+                            <span class="risk-label">Zone Status:</span>
+                            <span id="cam1ZoneText" class="risk-safe">SAFE (≤3)</span>
+                        </div>
+                    </div>
+
+                    <!-- IN-CAMERA LOCATION ALERT BANNER -->
+                    <div id="cam1AlertBanner" class="cam-alert-box hidden">
+                        <span class="cam-alert-icon">🚨</span>
+                        <span id="cam1AlertMsg" class="cam-alert-text">ALERT: High amount of people at Camera 1!</span>
                     </div>
 
                 </div>
@@ -157,9 +172,9 @@
 
                     <div class="camera-box-header">
 
-                        <span>📷 Camera 2</span>
+                        <span class="cam-box-title">📷 Camera 2</span>
 
-                        <div>
+                        <div class="header-badges">
                             <span id="cam2ZoneBadge" class="badge badge-normal">SAFE ZONE</span>
                             <span id="cam2StatusBadge" class="badge badge-offline">OFFLINE</span>
                         </div>
@@ -172,8 +187,8 @@
 
                         <div class="camera-overlay">
 
-                            <span>
-                                📱 192.168.137.60:8080
+                            <span id="cam2IpText">
+                                📱 192.168.137.209:8080
                             </span>
 
                             <span id="cam2ConnectionText">
@@ -184,10 +199,23 @@
 
                     </div>
 
-                    <div class="camera-box-footer">
-                        <span>People: <strong id="cam2Count">0</strong></span>
-                        <span class="small-text">Zone Risk: <span id="cam2ZoneText" class="risk-safe">SAFE
-                                (≤3)</span></span>
+                    <!-- REAL-TIME PEOPLE COUNT BELOW CAMERA FEED -->
+                    <div class="camera-count-bar">
+                        <div class="count-display">
+                            <span class="count-label">Real-Time Count:</span>
+                            <strong id="cam2Count" class="count-value">0</strong>
+                            <span class="count-unit">People</span>
+                        </div>
+                        <div class="camera-risk-info">
+                            <span class="risk-label">Zone Status:</span>
+                            <span id="cam2ZoneText" class="risk-safe">SAFE (≤3)</span>
+                        </div>
+                    </div>
+
+                    <!-- IN-CAMERA LOCATION ALERT BANNER -->
+                    <div id="cam2AlertBanner" class="cam-alert-box hidden">
+                        <span class="cam-alert-icon">🚨</span>
+                        <span id="cam2AlertMsg" class="cam-alert-text">ALERT: High amount of people at Camera 2!</span>
                     </div>
 
                 </div>
@@ -206,33 +234,60 @@
         <section class="status-section">
 
 
-            <!-- TOTAL PEOPLE -->
+            <!-- CAMERA 1 INDIVIDUAL LIVE COUNT CARD -->
 
-            <div class="card people-card">
+            <div id="sideCam1Card" class="card cam-stat-card">
 
                 <div class="card-title">
 
-                    <span>👥</span>
+                    <span>📷</span>
 
                     <p>
-                        People detected
+                        Camera 1 Live Count
                     </p>
 
                 </div>
 
-
-                <h2 id="totalPeopleCount">
+                <h2 id="sideCam1Count" class="cam-stat-number">
                     0
                 </h2>
 
-
-                <div class="count-breakdown">
-                    <div class="pill">Cam 1: <span id="breakdownCam1">0</span></div>
-                    <div class="pill">Cam 2: <span id="breakdownCam2">0</span></div>
+                <div class="card-status-bar">
+                    <span id="sideCam1Zone" class="risk-safe">Safe (≤3 People)</span>
                 </div>
 
                 <p class="small-text">
-                    Unique tracked person identities
+                    Individual real-time count for Camera 1
+                </p>
+
+            </div>
+
+
+
+            <!-- CAMERA 2 INDIVIDUAL LIVE COUNT CARD -->
+
+            <div id="sideCam2Card" class="card cam-stat-card">
+
+                <div class="card-title">
+
+                    <span>📷</span>
+
+                    <p>
+                        Camera 2 Live Count
+                    </p>
+
+                </div>
+
+                <h2 id="sideCam2Count" class="cam-stat-number">
+                    0
+                </h2>
+
+                <div class="card-status-bar">
+                    <span id="sideCam2Zone" class="risk-safe">Safe (≤3 People)</span>
+                </div>
+
+                <p class="small-text">
+                    Individual real-time count for Camera 2
                 </p>
 
             </div>
@@ -285,15 +340,15 @@
                 <div class="zone-rules">
 
                     <div class="rule-item green">
-                        <span>● Safe Zone:</span> ≤ 3 People
+                        <span>● Safe Zone:</span> ≤ 3 People (Normal)
                     </div>
 
                     <div class="rule-item orange">
-                        <span>● Warning Zone:</span> > 3 People
+                        <span>● High Crowd Alert:</span> > 3 People (Red Border Alert)
                     </div>
 
                     <div class="rule-item red">
-                        <span>● Critical Zone:</span> > 7 People
+                        <span>● Critical Zone:</span> > 7 People (Critical Red Alert)
                     </div>
 
                 </div>
@@ -319,10 +374,10 @@
 
                 <div class="cam-summary">
                     <div class="cam-item">
-                        <strong>Camera 1:</strong> 192.168.137.95
+                        <strong>Camera 1:</strong> <span id="summaryCam1Ip">100.70.115.163:8080</span>
                     </div>
                     <div class="cam-item">
-                        <strong>Camera 2:</strong> 192.168.137.60
+                        <strong>Camera 2:</strong> <span id="summaryCam2Ip">192.168.137.209:8080</span>
                     </div>
                 </div>
 

@@ -16,14 +16,14 @@ CAMERAS = {
     "cam1": {
         "id": "cam1",
         "name": "Camera 1",
-        "url": "http://192.168.137.95:8080/video",
-        "ip": "192.168.137.95:8080"
+        "url": "http://100.70.115.163:8080/video",
+        "ip": "100.70.115.163:8080"
     },
     "cam2": {
         "id": "cam2",
         "name": "Camera 2",
-        "url": "http://10.209.7.63:8080/video",
-        "ip": "10.209.7.63:8080"
+        "url": "http://192.168.137.209:8080/video",
+        "ip": "192.168.137.209:8080"
     }
 }
 
@@ -429,9 +429,29 @@ def ai_camera_loop(cam_id):
             2
         )
 
-        # If Critical (>7 people), draw alert border on frame
+        # If high crowd (>3 people), draw alert border and place alert banner on frame
         if cam_count > 7:
             cv2.rectangle(frame, (0, 0), (frame.shape[1] - 1, frame.shape[0] - 1), (0, 0, 255), 10)
+            cv2.putText(
+                frame,
+                f"CRITICAL ALERT: {cam_name.upper()} OVERCROWDED!",
+                (25, frame.shape[0] - 25),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0, 0, 255),
+                2
+            )
+        elif cam_count > 3:
+            cv2.rectangle(frame, (0, 0), (frame.shape[1] - 1, frame.shape[0] - 1), (0, 0, 255), 6)
+            cv2.putText(
+                frame,
+                f"ALERT: HIGH CROWD AT {cam_name.upper()}!",
+                (25, frame.shape[0] - 25),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0, 0, 255),
+                2
+            )
 
         # Encode Frame
         success_encode, buffer = cv2.imencode(
@@ -513,11 +533,12 @@ def people():
         connected = dict(camera_connected)
         track_ids_copy = {c: len(ids) for c, ids in active_track_ids.items()}
 
-    total_count = sum(counts.values())
+    # Per-camera alerts based on individual crowd thresholds
+    critical_cams = [config["name"] for cam_id, config in CAMERAS.items() if counts.get(cam_id, 0) > 7]
+    warning_cams = [config["name"] for cam_id, config in CAMERAS.items() if counts.get(cam_id, 0) > 3]
 
-    # Overall Crowd Risk Status
-    critical_active = any(c > 7 for c in counts.values()) or total_count > 10
-    warning_active = any(c > 3 for c in counts.values()) or total_count > 5
+    critical_active = len(critical_cams) > 0
+    warning_active = len(warning_cams) > 0
 
     if critical_active:
         overall_status = "CRITICAL"
@@ -530,6 +551,7 @@ def people():
     for cam_id, config in CAMERAS.items():
         c_count = counts.get(cam_id, 0)
         zone_label, _, risk_level = classify_zone_risk(c_count)
+        has_alert = c_count > 3
 
         camera_details[cam_id] = {
             "name": config["name"],
@@ -539,14 +561,16 @@ def people():
             "unique_tracks": track_ids_copy.get(cam_id, 0),
             "zone_risk": zone_label,
             "risk_level": risk_level,
-            "connected": connected.get(cam_id, False)
+            "connected": connected.get(cam_id, False),
+            "has_alert": has_alert,
+            "alert_message": f"High crowd detected at {config['name']} ({c_count} people)" if has_alert else ""
         }
 
     return jsonify({
-        "total_count": total_count,
         "status": overall_status,
         "critical_zone_active": critical_active,
         "warning_zone_active": warning_active,
+        "alert_cameras": warning_cams,
         "cameras": camera_details,
         "timestamp": time.time()
     })
