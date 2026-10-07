@@ -1,4 +1,4 @@
-from flask import Flask, Response, jsonify, send_from_directory
+from flask import Flask, Response, jsonify, send_from_directory, render_template
 from ultralytics import YOLO
 import cv2
 import time
@@ -6,31 +6,18 @@ import threading
 import numpy as np
 import os
 
-app = Flask(__name__)
+from config import (
+    CAMERAS,
+    HOST,
+    PORT,
+    MODEL_PATH,
+    CONFIDENCE,
+    IMG_SIZE,
+    THRESHOLD_SAFE,
+    THRESHOLD_CRITICAL
+)
 
-# ==================================================
-# CONFIGURATION - MULTI-CAMERA & ZONE RISK RULES
-# ==================================================
-
-CAMERAS = {
-    "cam1": {
-        "id": "cam1",
-        "name": "Camera 1",
-        "url": "http://100.70.115.163:8080/video",
-        "ip": "100.70.115.163:8080"
-    },
-    "cam2": {
-        "id": "cam2",
-        "name": "Camera 2",
-        "url": "http://192.168.137.209:8080/video",
-        "ip": "192.168.137.209:8080"
-    }
-}
-
-PORT = 5000
-CONFIDENCE = 0.40
-PROCESS_EVERY = 2
-
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # ==================================================
 # LOAD YOLO MODEL
@@ -43,8 +30,8 @@ print("   Heatmaps, Deduplication & Zone Risk")
 print("==========================================")
 print()
 
-print("Loading YOLO model...")
-model = YOLO("yolo11n.pt")
+print(f"Loading YOLO model ({MODEL_PATH})...")
+model = YOLO(MODEL_PATH)
 print("YOLO model loaded successfully!")
 print()
 
@@ -104,17 +91,17 @@ def generate_density_heatmap(frame, centroids):
 
 def classify_zone_risk(count):
     """
-    Threshold Rules:
-    - 0 to 3 people  -> SAFE / NORMAL (Green)
-    - 4 to 7 people  -> RED ZONE (>3) (Orange/Red)
-    - > 7 people     -> CRITICAL ZONE (>7) (Bright Red Alert)
+    Zone Risk Evaluation:
+    - <= THRESHOLD_SAFE (3)       -> SAFE (<3) (Green)
+    - <= THRESHOLD_CRITICAL (7)   -> WARNING (>3) (Orange/Yellow)
+    - > THRESHOLD_CRITICAL (7)    -> CRITICAL (>7) (Red Alert)
     """
-    if count <= 3:
-        return "SAFE ZONE", (34, 197, 94), "NORMAL"
-    elif count <= 7:
-        return "RED ZONE (>3)", (0, 140, 255), "WARNING"
+    if count <= THRESHOLD_SAFE:
+        return "SAFE (<3)", (34, 197, 94), "NORMAL"
+    elif count <= THRESHOLD_CRITICAL:
+        return "WARNING (>3)", (0, 140, 255), "WARNING"
     else:
-        return "CRITICAL ZONE (>7)", (0, 0, 255), "CRITICAL"
+        return "CRITICAL (>7)", (0, 0, 255), "CRITICAL"
 
 
 # ==================================================
@@ -195,17 +182,17 @@ def generate_offline_frame(cam_id, status_text="CAMERA DISCONNECTED"):
 
 @app.route("/")
 def dashboard():
-    return send_from_directory(".", "index.html")
+    return render_template("index.html")
 
 
 @app.route("/style.css")
 def css():
-    return send_from_directory(".", "style.css")
+    return send_from_directory("static/css", "style.css")
 
 
 @app.route("/script.js")
 def javascript():
-    return send_from_directory(".", "script.js")
+    return send_from_directory("static/js", "script.js")
 
 
 # ==================================================
@@ -327,7 +314,7 @@ def ai_camera_loop(cam_id):
         results = model(
             source=small_frame,
             conf=CONFIDENCE,
-            imgsz=640,
+            imgsz=IMG_SIZE,
             verbose=False
         )
 
@@ -598,7 +585,7 @@ if __name__ == "__main__":
         t.start()
 
     app.run(
-        host="0.0.0.0",
+        host=HOST,
         port=PORT,
         debug=False,
         threaded=True

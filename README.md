@@ -138,24 +138,24 @@ python -m venv venv
 
 ### 3. Install Dependencies
 ```bash
-pip install flask ultralytics opencv-python numpy
+pip install -r requirements.txt
 ```
 
-### 4. Configure Mobile/CCTV Camera IPs
-Open `app.py` and set your live camera URLs in `CAMERAS`:
+### 4. Configure Mobile/CCTV Camera IPs & Rules
+Open `config.py` and adjust your live camera IP streams, port, or safety thresholds:
 ```python
 CAMERAS = {
     "cam1": {
         "id": "cam1",
-        "name": "Camera 1 (Entrance Zone)",
-        "url": "http://10.209.7.208:8080/video",
-        "ip": "192.168.137.125:8080"
+        "name": "Camera 1",
+        "url": "http://100.70.115.163:8080/video",
+        "ip": "100.70.115.163:8080"
     },
     "cam2": {
         "id": "cam2",
-        "name": "Camera 2 (Main Hall)",
-        "url": "http://192.168.137.60:8080/video",
-        "ip": "192.168.137.60:8080"
+        "name": "Camera 2",
+        "url": "http://192.168.137.209:8080/video",
+        "ip": "192.168.137.209:8080"
     }
 }
 ```
@@ -167,6 +167,30 @@ python app.py
 
 ### 6. Open Control Dashboard
 Navigate to `http://localhost:5000` in your web browser.
+
+---
+
+## 📂 Project File Structure
+
+```
+Crowd_Monitoring_System/
+│
+├── config.py                 # Central configuration (camera streams, YOLO hyperparams, zone thresholds)
+├── app.py                    # Main Flask application, OpenCV streaming workers & YOLO inference engine
+├── requirements.txt          # Python project dependencies
+├── yolo11n.pt                # YOLOv11 deep learning model weights
+│
+├── templates/
+│   └── index.html            # Main web dashboard interface (modern dark glassmorphism layout)
+│
+├── static/
+│   ├── css/
+│   │   └── style.css         # Styling, layout, glowing red alert animations & card designs
+│   └── js/
+│       └── script.js         # Real-time polling, live clock, alert triggers & event log table renderer
+│
+└── README.md                 # Complete project documentation and guide
+```
 
 ---
 
