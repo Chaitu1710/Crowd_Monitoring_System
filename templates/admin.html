@@ -508,43 +508,6 @@
                 </div>
             </div>
 
-            <div class="kpi-card">
-                <div class="kpi-meta">
-                    <span class="kpi-label">AI YOLO Model</span>
-                    <strong class="kpi-value">YOLO11n</strong>
-                    <span class="kpi-sub">Confidence: 0.40 | Res: 640px</span>
-                </div>
-                <div class="kpi-icon-box amber">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                    </svg>
-                </div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-meta">
-                    <span class="kpi-label">Server Telemetry</span>
-                    <strong class="kpi-value" id="kpiCpu">CPU: --%</strong>
-                    <span class="kpi-sub" id="kpiRam">RAM: --%</span>
-                </div>
-                <div class="kpi-icon-box red">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
-                        <rect x="9" y="9" width="6" height="6"/>
-                        <line x1="9" y1="1" x2="9" y2="4"/>
-                        <line x1="15" y1="1" x2="15" y2="4"/>
-                        <line x1="9" y1="20" x2="9" y2="23"/>
-                        <line x1="15" y1="20" x2="15" y2="23"/>
-                        <line x1="20" y1="9" x2="23" y2="9"/>
-                        <line x1="20" y1="14" x2="23" y2="14"/>
-                        <line x1="1" y1="9" x2="4" y2="9"/>
-                        <line x1="1" y1="14" x2="4" y2="14"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
         <!-- NAVIGATION TABS -->
         <div class="admin-tabs-nav">
             <button class="tab-btn active" onclick="switchTab('camerasTab')">
@@ -553,17 +516,11 @@
             <button class="tab-btn" onclick="switchTab('rulesTab')">
                 🎯 Safety Thresholds
             </button>
-            <button class="tab-btn" onclick="switchTab('aiTab')">
-                🧠 AI & Heatmaps
-            </button>
             <button class="tab-btn" onclick="switchTab('alarmsTab')">
                 🚨 Alarm & Siren Settings
             </button>
             <button class="tab-btn" onclick="switchTab('incidentsTab')">
                 📊 Surge Incident History
-            </button>
-            <button class="tab-btn" onclick="switchTab('telemetryTab')">
-                💻 System Telemetry
             </button>
         </div>
 
@@ -693,49 +650,7 @@
         </div>
 
 
-        <!-- TAB 3: AI & HEATMAPS -->
-        <div id="aiTab" class="tab-pane">
-            <div class="module-card">
-                <div class="module-header">
-                    <div class="module-title-group">
-                        <div class="header-icon-square">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="3"/>
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2>YOLOv11 Detection & Density Heatmap Tuning</h2>
-                            <p>Adjust model detection threshold and 2D Gaussian density colormap blending</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="grid-form">
-                    <div class="form-field">
-                        <label>YOLO Detection Confidence Threshold</label>
-                        <div class="slider-wrapper">
-                            <input type="range" id="confSlider" min="0.10" max="0.90" step="0.05" value="0.40" class="range-slider" oninput="document.getElementById('confVal').textContent = this.value">
-                            <span id="confVal" class="slider-val">0.40</span>
-                        </div>
-                        <span style="font-size: 11px; color: #8da2c0;">Higher values reduce false detections; lower values capture distant individuals.</span>
-                    </div>
-
-                    <div class="form-field">
-                        <label>Heatmap Colormap Scheme</label>
-                        <select id="colormapSelect" class="admin-input">
-                            <option value="JET" selected>JET (Blue -> Green -> Red) [Default]</option>
-                            <option value="HOT">HOT (Black -> Red -> Yellow -> White)</option>
-                            <option value="TURBO">TURBO (High-Contrast Perceptual Rainbow)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
-                    <button class="btn-primary" onclick="handleApplyAiSettings()">Apply AI Tuning</button>
-                </div>
-            </div>
-        </div>
 
 
         <!-- TAB 4: ALARMS & SIRENS -->
@@ -840,44 +755,7 @@
         </div>
 
 
-        <!-- TAB 6: SYSTEM TELEMETRY -->
-        <div id="telemetryTab" class="tab-pane">
-            <div class="module-card">
-                <div class="module-header">
-                    <div class="module-title-group">
-                        <div class="header-icon-square">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
-                                <rect x="9" y="9" width="6" height="6"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2>Real-Time Hardware & Inference Telemetry</h2>
-                            <p>Live resource consumption, worker thread health, and model FPS status</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="grid-form">
-                    <div class="form-field">
-                        <label>CPU Utilization</label>
-                        <input type="text" id="telCpu" class="admin-input" readonly value="Loading...">
-                    </div>
-                    <div class="form-field">
-                        <label>RAM Memory Used</label>
-                        <input type="text" id="telRam" class="admin-input" readonly value="Loading...">
-                    </div>
-                    <div class="form-field">
-                        <label>Active Worker Threads</label>
-                        <input type="text" id="telThreads" class="admin-input" readonly value="2 Camera Ingestion Threads">
-                    </div>
-                    <div class="form-field">
-                        <label>YOLO Model Execution Device</label>
-                        <input type="text" id="telDevice" class="admin-input" readonly value="CPU / PyTorch (Auto-Optimized)">
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </main>
 
@@ -899,22 +777,12 @@
             event.target.classList.add('active');
         }
 
-        // Fetch Telemetry & Populate Camera Table
+        // Fetch Data & Populate Camera Table
         async function fetchAdminData() {
             try {
                 const res = await fetch('/api/admin/info');
                 if (!res.ok) return;
                 const data = await res.json();
-
-                // Telemetry
-                if (data.cpu !== undefined) {
-                    document.getElementById('kpiCpu').textContent = `CPU: ${data.cpu}%`;
-                    document.getElementById('telCpu').value = `${data.cpu}% Active`;
-                }
-                if (data.ram !== undefined) {
-                    document.getElementById('kpiRam').textContent = `RAM: ${data.ram}%`;
-                    document.getElementById('telRam').value = `${data.ram}% Used (${data.ram_gb || 'N/A'})`;
-                }
 
                 // Cameras Table
                 const tbody = document.getElementById('cameraTableBody');
@@ -949,10 +817,6 @@
                 }
                 if (data.critical_threshold !== undefined) {
                     document.getElementById('inputCriticalThreshold').value = data.critical_threshold;
-                }
-                if (data.confidence !== undefined) {
-                    document.getElementById('confSlider').value = data.confidence;
-                    document.getElementById('confVal').textContent = data.confidence;
                 }
 
             } catch (e) {
@@ -1011,19 +875,7 @@
             }
         }
 
-        async function handleApplyAiSettings() {
-            const conf = parseFloat(document.getElementById('confSlider').value);
-            const colormap = document.getElementById('colormapSelect').value;
-            const res = await fetch('/api/admin/ai/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ confidence: conf, colormap })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast(`YOLO confidence updated to ${conf}`);
-            }
-        }
+
 
         function testAudioAlert() {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
