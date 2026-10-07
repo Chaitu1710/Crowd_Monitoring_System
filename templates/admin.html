@@ -8,39 +8,103 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-main: #060b18;
+            --bg-header: #091224;
+            --bg-card: #0b1428;
+            --bg-card-inner: #070d1e;
+            --border-subtle: #162444;
+            --border-card: #1a2a4c;
+            --border-hover: #2b4274;
+            --blue-primary: #2563eb;
+            --blue-bright: #3b82f6;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-main);
+            background-image: radial-gradient(1800px circle at 50% -10%, #102450 0%, #060b18 70%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* TOP NAVIGATION */
         .admin-nav-bar {
-            background: #091224;
+            background: rgba(9, 18, 36, 0.95);
+            backdrop-filter: blur(14px);
             border-bottom: 1px solid var(--border-subtle);
-            padding: 0 32px;
-            height: 72px;
+            padding: 0 clamp(16px, 3vw, 40px);
+            min-height: 72px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
+            gap: 16px;
+            flex-wrap: wrap;
+            width: 100%;
         }
 
         .admin-nav-left {
             display: flex;
             align-items: center;
             gap: 16px;
+            flex-wrap: wrap;
         }
 
-        .admin-nav-right {
+        .brand-shield-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
             display: flex;
             align-items: center;
-            gap: 16px;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
+            flex-shrink: 0;
+        }
+
+        .brand-shield-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .brand-titles h1 {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+        .brand-titles p {
+            font-size: 12px;
+            color: #8da2c0;
+            margin-top: 2px;
         }
 
         .admin-badge {
-            background: rgba(245, 158, 11, 0.18);
-            border: 1px solid rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.16);
+            border: 1px solid rgba(245, 158, 11, 0.45);
             color: #fbbf24;
             padding: 5px 12px;
-            border-radius: 6px;
+            border-radius: 20px;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.5px;
@@ -49,11 +113,18 @@
             gap: 6px;
         }
 
+        .admin-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .btn-nav-action {
-            background: rgba(37, 99, 235, 0.15);
+            background: rgba(37, 99, 235, 0.14);
             border: 1px solid rgba(59, 130, 246, 0.35);
             color: #93c5fd;
-            padding: 7px 14px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-size: 12px;
             font-weight: 600;
@@ -63,12 +134,14 @@
             align-items: center;
             gap: 8px;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .btn-nav-action:hover {
             background: rgba(37, 99, 235, 0.3);
             color: #ffffff;
             border-color: #3b82f6;
+            transform: translateY(-1px);
         }
 
         .btn-logout {
@@ -83,206 +156,273 @@
             border-color: #ef4444;
         }
 
+        /* MAIN VIEWPORT - FULL SCREEN UTILIZATION */
         .admin-viewport {
-            max-width: 1680px;
             width: 100%;
-            margin: 0 auto;
-            padding: 24px 32px 48px;
+            padding: 24px clamp(16px, 3vw, 40px) 48px;
             display: flex;
             flex-direction: column;
             gap: 24px;
+            flex: 1;
         }
 
-        /* KPI Quick Stat Cards */
+        /* KPI SUMMARY ROW - RESPONSIVE CARDS */
         .kpi-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            width: 100%;
         }
 
         .kpi-card {
             background: var(--bg-card);
             border: 1px solid var(--border-card);
             border-radius: 12px;
-            padding: 18px 20px;
+            padding: 20px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .kpi-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
         }
 
         .kpi-meta {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 5px;
         }
 
         .kpi-label {
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: var(--text-secondary);
+            letter-spacing: 0.8px;
+            color: #8da2c0;
         }
 
         .kpi-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 800;
             color: #ffffff;
             font-family: var(--font-mono);
+            letter-spacing: -0.5px;
         }
 
         .kpi-sub {
-            font-size: 11px;
-            color: var(--text-muted);
+            font-size: 12px;
+            color: #5e7394;
         }
 
         .kpi-icon-box {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .kpi-icon-box.blue {
-            background: rgba(37, 99, 235, 0.14);
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(37, 99, 235, 0.16);
+            border: 1px solid rgba(59, 130, 246, 0.35);
             color: #60a5fa;
         }
 
         .kpi-icon-box.green {
-            background: rgba(34, 197, 94, 0.14);
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.16);
+            border: 1px solid rgba(34, 197, 94, 0.35);
             color: #4ade80;
         }
 
         .kpi-icon-box.amber {
-            background: rgba(245, 158, 11, 0.14);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.16);
+            border: 1px solid rgba(245, 158, 11, 0.35);
             color: #fbbf24;
         }
 
-        .kpi-icon-box.red {
-            background: rgba(239, 68, 68, 0.14);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #f87171;
-        }
-
-        /* Tabs Navigation */
+        /* NAVIGATION TABS - FULL WIDTH */
         .admin-tabs-nav {
             display: flex;
+            align-items: center;
             gap: 10px;
             border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 12px;
+            padding-bottom: 14px;
+            width: 100%;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .admin-tabs-nav::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .admin-tabs-nav::-webkit-scrollbar-thumb {
+            background: var(--border-card);
+            border-radius: 4px;
         }
 
         .tab-btn {
             background: #091224;
             border: 1px solid var(--border-subtle);
-            color: var(--text-secondary);
-            padding: 9px 18px;
-            border-radius: 8px;
+            color: #8da2c0;
+            padding: 11px 20px;
+            border-radius: 10px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             transition: all 0.2s ease;
+            white-space: nowrap;
+            user-select: none;
         }
 
         .tab-btn:hover {
-            background: #0e1b38;
+            background: #0f1c3a;
             color: #ffffff;
-            border-color: #243b68;
+            border-color: #2b4274;
         }
 
         .tab-btn.active {
             background: linear-gradient(135deg, #1d4ed8, #2563eb);
             color: #ffffff;
             border-color: #3b82f6;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
         }
 
-        /* Tab Content Panes */
+        /* TAB PANES */
         .tab-pane {
             display: none;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
+            width: 100%;
+            animation: fadeIn 0.2s ease;
         }
 
         .tab-pane.active {
             display: flex;
         }
 
-        /* Module Card */
+        @keyframes fadeIn {
+            from { opacity: 0.6; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* MODULE CARDS */
         .module-card {
             background: var(--bg-card);
             border: 1px solid var(--border-card);
             border-radius: 14px;
-            padding: 24px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            padding: clamp(18px, 2.5vw, 28px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            width: 100%;
         }
 
         .module-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         .module-title-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
+        }
+
+        .header-icon-square {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #070d1e;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #60a5fa;
+            flex-shrink: 0;
+        }
+
+        .header-icon-square svg {
+            width: 22px;
+            height: 22px;
         }
 
         .module-title-group h2 {
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 700;
             color: #ffffff;
+            letter-spacing: -0.2px;
         }
 
         .module-title-group p {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 2px;
+            font-size: 13px;
+            color: #8da2c0;
+            margin-top: 3px;
         }
 
-        /* Cameras Table */
+        /* TABLE WRAPPER - RESPONSIVE SCROLL */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            background: #070d1e;
+        }
+
         .custom-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
+            min-width: 650px;
         }
 
         .custom-table th {
             text-align: left;
-            background: #080f22;
-            color: var(--text-muted);
+            background: #091225;
+            color: #8da2c0;
             font-size: 11px;
             font-weight: 700;
-            letter-spacing: 0.6px;
-            padding: 12px 16px;
+            letter-spacing: 0.7px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--border-subtle);
+            white-space: nowrap;
         }
 
         .custom-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid rgba(22, 36, 68, 0.5);
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(22, 36, 68, 0.6);
             vertical-align: middle;
         }
 
+        .custom-table tr:last-child td {
+            border-bottom: none;
+        }
+
         .custom-table tr:hover {
-            background: rgba(30, 48, 86, 0.2);
+            background: rgba(30, 48, 86, 0.25);
         }
 
         .badge-status {
-            padding: 4px 8px;
-            border-radius: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 11px;
             font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
         }
 
         .badge-online {
@@ -294,33 +434,25 @@
         .badge-disabled {
             background: rgba(100, 116, 139, 0.2);
             color: #94a3b8;
-            border: 1px solid rgba(100, 116, 139, 0.4);
+            border: 1px solid rgba(100, 116, 139, 0.35);
         }
 
-        /* Action Buttons */
+        /* ACTION BUTTONS */
         .btn-table-action {
-            padding: 5px 10px;
+            padding: 6px 14px;
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             border: 1px solid transparent;
             transition: all 0.2s ease;
-        }
-
-        .btn-edit {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-            border-color: rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-edit:hover {
-            background: #2563eb;
-            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .btn-delete {
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.14);
             color: #f87171;
             border-color: rgba(239, 68, 68, 0.3);
         }
@@ -328,35 +460,38 @@
         .btn-delete:hover {
             background: #ef4444;
             color: #ffffff;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
 
-        /* Form Inputs */
+        /* FORMS - ADAPTIVE FULL WIDTH GRID */
         .grid-form {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
-            margin-top: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
         }
 
         .form-field {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
+            width: 100%;
         }
 
         .form-field label {
             font-size: 12px;
             font-weight: 600;
             color: #cbd5e1;
+            letter-spacing: 0.2px;
         }
 
         .admin-input {
             width: 100%;
-            height: 42px;
+            height: 44px;
             background: #070d1e;
             border: 1px solid var(--border-card);
             border-radius: 8px;
-            padding: 0 14px;
+            padding: 0 16px;
             color: #ffffff;
             font-size: 13px;
             font-family: var(--font-main);
@@ -367,66 +502,111 @@
             outline: none;
             border-color: #3b82f6;
             background: #09132b;
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.3);
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            border: none;
+            border: 1px solid #3b82f6;
             color: #ffffff;
-            padding: 10px 20px;
+            padding: 11px 24px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            white-space: nowrap;
         }
 
         .btn-primary:hover {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
-            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.55);
             transform: translateY(-1px);
         }
 
-        /* Range Slider */
-        .slider-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .slider-val {
-            font-family: var(--font-mono);
-            font-weight: 700;
-            font-size: 14px;
-            color: #60a5fa;
-            min-width: 50px;
-        }
-
-        .range-slider {
-            flex: 1;
-            height: 6px;
-            accent-color: #3b82f6;
-            cursor: pointer;
-        }
-
-        /* Toast notification */
-        #toastNotice {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #1e3a8a;
-            border: 1px solid #3b82f6;
-            color: #ffffff;
-            padding: 12px 20px;
+        .btn-secondary {
+            background: rgba(30, 48, 86, 0.5);
+            border: 1px solid var(--border-hover);
+            color: #cbd5e1;
+            padding: 11px 22px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 600;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(37, 99, 235, 0.25);
+            color: #ffffff;
+            border-color: #3b82f6;
+        }
+
+        /* LIVE PREVIEW BANNER */
+        .rules-preview-box {
+            background: #070d1e;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .rule-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .rule-safe {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+
+        .rule-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
+        .rule-critical {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+
+        /* TOAST NOTIFICATION */
+        #toastNotice {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #1e3a8a;
+            border: 1px solid #3b82f6;
+            color: #ffffff;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             display: none;
             z-index: 999;
             animation: slideUp 0.3s ease;
@@ -436,12 +616,42 @@
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+
+        /* MEDIA QUERIES FOR SEAMLESS RESPONSIVENESS */
+        @media (max-width: 768px) {
+            .admin-nav-bar {
+                padding: 12px 16px;
+                height: auto;
+            }
+
+            .admin-viewport {
+                padding: 16px 16px 36px;
+                gap: 18px;
+            }
+
+            .kpi-row {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-form {
+                grid-template-columns: 1fr;
+            }
+
+            .module-card {
+                padding: 18px;
+            }
+
+            .admin-nav-right {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- TOP HEADER -->
+    <!-- TOP NAVIGATION -->
     <header class="admin-nav-bar">
         <div class="admin-nav-left">
             <div class="brand-shield-icon">
@@ -449,9 +659,9 @@
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
             </div>
-            <div>
-                <h1 style="font-size: 18px; font-weight: 700; color: #fff;">Crowd Safety Monitor</h1>
-                <p style="font-size: 11px; color: var(--text-secondary);">Administrator Control Center & System Orchestration</p>
+            <div class="brand-titles">
+                <h1>Crowd Safety Monitor</h1>
+                <p>Administrator Control Center & System Orchestration</p>
             </div>
             <span class="admin-badge">👑 FULL ADMIN ACCESS</span>
         </div>
@@ -476,19 +686,19 @@
         </div>
     </header>
 
-    <!-- MAIN VIEWPORT -->
+    <!-- MAIN VIEWPORT (FULL-SCREEN FLUID LAYOUT) -->
     <main class="admin-viewport">
 
         <!-- KPI SUMMARY ROW -->
         <div class="kpi-row">
             <div class="kpi-card">
                 <div class="kpi-meta">
-                    <span class="kpi-label">Configured Cameras</span>
+                    <span class="kpi-label">Configured Camera Feeds</span>
                     <strong class="kpi-value" id="kpiCamCount">2 Streams</strong>
-                    <span class="kpi-sub" id="kpiCamSub">Live background threads active</span>
+                    <span class="kpi-sub">Multi-threaded video ingestion active</span>
                 </div>
                 <div class="kpi-icon-box blue">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="23 7 16 12 23 17 23 7"/>
                         <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                     </svg>
@@ -497,36 +707,51 @@
 
             <div class="kpi-card">
                 <div class="kpi-meta">
-                    <span class="kpi-label">Zone Safety Rules</span>
-                    <strong class="kpi-value">Safe ≤3 | Surge >7</strong>
-                    <span class="kpi-sub">Critical thresholds active</span>
+                    <span class="kpi-label">Zone Safety Thresholds</span>
+                    <strong class="kpi-value" id="kpiRulesSummary">Safe ≤3 | Surge >7</strong>
+                    <span class="kpi-sub">Automated crowd risk categorization</span>
                 </div>
                 <div class="kpi-icon-box green">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                 </div>
             </div>
 
+            <div class="kpi-card">
+                <div class="kpi-meta">
+                    <span class="kpi-label">Alarm & Dispatch System</span>
+                    <strong class="kpi-value" style="color: #fbbf24;">ARMED & READY</strong>
+                    <span class="kpi-sub">Audio siren & visual alert broadcast</span>
+                </div>
+                <div class="kpi-icon-box amber">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
         <!-- NAVIGATION TABS -->
         <div class="admin-tabs-nav">
-            <button class="tab-btn active" onclick="switchTab('camerasTab')">
+            <button class="tab-btn active" data-tab="camerasTab" onclick="switchTab('camerasTab', this)">
                 📹 Camera Streams
             </button>
-            <button class="tab-btn" onclick="switchTab('rulesTab')">
+            <button class="tab-btn" data-tab="rulesTab" onclick="switchTab('rulesTab', this)">
                 🎯 Safety Thresholds
             </button>
-            <button class="tab-btn" onclick="switchTab('alarmsTab')">
+            <button class="tab-btn" data-tab="alarmsTab" onclick="switchTab('alarmsTab', this)">
                 🚨 Alarm & Siren Settings
             </button>
-            <button class="tab-btn" onclick="switchTab('incidentsTab')">
+            <button class="tab-btn" data-tab="incidentsTab" onclick="switchTab('incidentsTab', this)">
                 📊 Surge Incident History
             </button>
         </div>
 
-
         <!-- TAB 1: CAMERA STREAM MANAGEMENT -->
         <div id="camerasTab" class="tab-pane active">
+            <!-- Camera Table Module -->
             <div class="module-card">
                 <div class="module-header">
                     <div class="module-title-group">
@@ -538,40 +763,44 @@
                         </div>
                         <div>
                             <h2>Live Camera Ingestion Management</h2>
-                            <p>Configure RTSP, HTTP MJPEG, or local webcam sources without restarting the server</p>
+                            <p>Configure RTSP, HTTP MJPEG, or local camera endpoints in real-time</p>
                         </div>
                     </div>
                 </div>
 
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>CAMERA ID</th>
-                            <th>LOCATION / NAME</th>
-                            <th>IP ENDPOINT</th>
-                            <th>STREAM TARGET URL</th>
-                            <th>STATUS</th>
-                            <th>ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cameraTableBody">
-                        <!-- Populated dynamically via JS -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>CAMERA ID</th>
+                                <th>LOCATION / NAME</th>
+                                <th>IP ENDPOINT</th>
+                                <th>STREAM TARGET URL</th>
+                                <th>STATUS</th>
+                                <th style="text-align: right;">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cameraTableBody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <!-- ADD CAMERA FORM -->
+            <!-- Add Camera Module -->
             <div class="module-card">
-                <div class="module-title-group" style="margin-bottom: 16px;">
-                    <div class="header-icon-square">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2>Register New Camera Stream</h2>
-                        <p>Attach an IP Webcam (e.g. Android IP Webcam app) or CCTV network RTSP feed</p>
+                <div class="module-header">
+                    <div class="module-title-group">
+                        <div class="header-icon-square">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Register New Camera Stream</h2>
+                            <p>Attach an IP Webcam (e.g. Android IP Webcam app) or CCTV network RTSP feed</p>
+                        </div>
                     </div>
                 </div>
 
@@ -583,7 +812,7 @@
                         </div>
                         <div class="form-field">
                             <label>Camera Display Name (e.g. Gate 3 - Main Plaza)</label>
-                            <input type="text" id="newCamName" class="admin-input" placeholder="Camera 3 (North Gate)" required>
+                            <input type="text" id="newCamName" class="admin-input" placeholder="Camera 3 (Main Plaza)" required>
                         </div>
                         <div class="form-field">
                             <label>IP / Endpoint Label</label>
@@ -595,7 +824,7 @@
                         </div>
                     </div>
 
-                    <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                    <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
                         <button type="submit" class="btn-primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
@@ -609,7 +838,6 @@
             </div>
         </div>
 
-
         <!-- TAB 2: SAFETY THRESHOLD RULES -->
         <div id="rulesTab" class="tab-pane">
             <div class="module-card">
@@ -622,8 +850,18 @@
                         </div>
                         <div>
                             <h2>Crowd Safety Threshold Rules</h2>
-                            <p>Define crowd density boundaries for automatic Safe, Warning, and Critical alerts</p>
+                            <p>Configure automated zone classification and critical emergency trigger levels</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Visual Rule Preview -->
+                <div class="rules-preview-box">
+                    <span style="font-size: 13px; font-weight: 600; color: #8da2c0;">Current Classification Logic:</span>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <span class="rule-pill rule-safe" id="previewSafe">🟢 Safe: ≤ 3 people</span>
+                        <span class="rule-pill rule-warning" id="previewWarning">🟡 Warning: 4 to 7 people</span>
+                        <span class="rule-pill rule-critical" id="previewCritical">🔴 Critical Surge: > 7 people</span>
                     </div>
                 </div>
 
@@ -631,29 +869,32 @@
                     <div class="grid-form">
                         <div class="form-field">
                             <label>🟢 Safe Zone Upper Bound (≤ People)</label>
-                            <input type="number" id="inputSafeThreshold" class="admin-input" min="1" max="50" value="3" required>
-                            <span style="font-size: 11px; color: #8da2c0; margin-top: 4px;">Densities at or below this count show green SAFE status.</span>
+                            <input type="number" id="inputSafeThreshold" class="admin-input" min="1" max="50" value="3" oninput="updateRulePreviews()" required>
+                            <span style="font-size: 11px; color: #8da2c0;">Densities at or below this count show green SAFE status.</span>
                         </div>
 
                         <div class="form-field">
                             <label>🔴 Critical Surge Threshold (&gt; People)</label>
-                            <input type="number" id="inputCriticalThreshold" class="admin-input" min="2" max="100" value="7" required>
-                            <span style="font-size: 11px; color: #8da2c0; margin-top: 4px;">Densities exceeding this count trigger red borders and emergency alerts.</span>
+                            <input type="number" id="inputCriticalThreshold" class="admin-input" min="2" max="100" value="7" oninput="updateRulePreviews()" required>
+                            <span style="font-size: 11px; color: #8da2c0;">Densities exceeding this count trigger red borders and audible emergency alerts.</span>
                         </div>
                     </div>
 
                     <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
-                        <button type="submit" class="btn-primary">Save Threshold Rules</button>
+                        <button type="submit" class="btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save Threshold Rules
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
 
-
-
-
-
-        <!-- TAB 4: ALARMS & SIRENS -->
+        <!-- TAB 3: ALARMS & SIRENS -->
         <div id="alarmsTab" class="tab-pane">
             <div class="module-card">
                 <div class="module-header">
@@ -665,8 +906,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h2>Audible Alarms & Emergency Webhooks</h2>
-                            <p>Configure automated browser sirens and dispatch notifications on critical surge</p>
+                            <h2>Audible Alarms & Emergency Dispatch</h2>
+                            <p>Configure automated browser sirens and notifications triggered upon critical surge</p>
                         </div>
                     </div>
                 </div>
@@ -686,19 +927,18 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
-                    <button class="btn-nav-action" onclick="testAudioAlert()">
+                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+                    <button type="button" class="btn-secondary" onclick="testAudioAlert()">
                         🔊 Test Siren Sound
                     </button>
-                    <button class="btn-primary" onclick="showToast('Emergency alarm settings saved successfully!')">
+                    <button type="button" class="btn-primary" onclick="showToast('Emergency alarm settings saved successfully!')">
                         Save Alarm Settings
                     </button>
                 </div>
             </div>
         </div>
 
-
-        <!-- TAB 5: INCIDENT HISTORY -->
+        <!-- TAB 4: INCIDENT HISTORY -->
         <div id="incidentsTab" class="tab-pane">
             <div class="module-card">
                 <div class="module-header">
@@ -716,46 +956,45 @@
                             <p>Historical audit archive of threshold breach incidents and dispersal logs</p>
                         </div>
                     </div>
-                    <button class="btn-nav-action" onclick="exportIncidentLog()">
+                    <button class="btn-secondary" onclick="exportIncidentLog()">
                         📥 Export Incident Report (JSON)
                     </button>
                 </div>
 
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>INCIDENT ID</th>
-                            <th>TIMESTAMP</th>
-                            <th>CAMERA LOCATION</th>
-                            <th>PEAK CROWD COUNT</th>
-                            <th>RISK SEVERITY</th>
-                            <th>ACTION TAKEN</th>
-                        </tr>
-                    </thead>
-                    <tbody id="incidentsTableBody">
-                        <tr>
-                            <td><code>INC-2026-001</code></td>
-                            <td>2026-10-07 10:17:19</td>
-                            <td>Camera 2 (Main Plaza)</td>
-                            <td><strong style="color: #ef4444;">9 People</strong></td>
-                            <td><span class="badge-status" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;">CRITICAL (>7)</span></td>
-                            <td>Visual Alert Dispatched • Dispersal Logged</td>
-                        </tr>
-                        <tr>
-                            <td><code>INC-2026-002</code></td>
-                            <td>2026-10-07 09:45:10</td>
-                            <td>Camera 1 (North Gate)</td>
-                            <td><strong style="color: #f59e0b;">5 People</strong></td>
-                            <td><span class="badge-status" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b;">WARNING (>3)</span></td>
-                            <td>Patrol Officer Notified</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>INCIDENT ID</th>
+                                <th>TIMESTAMP</th>
+                                <th>CAMERA LOCATION</th>
+                                <th>PEAK CROWD COUNT</th>
+                                <th>RISK SEVERITY</th>
+                                <th>ACTION TAKEN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incidentsTableBody">
+                            <tr>
+                                <td><code>INC-2026-001</code></td>
+                                <td>2026-10-07 10:17:19</td>
+                                <td>Camera 2 (Main Plaza)</td>
+                                <td><strong style="color: #ef4444;">9 People</strong></td>
+                                <td><span class="badge-status" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;">CRITICAL (&gt;7)</span></td>
+                                <td>Visual Alert Dispatched • Dispersal Logged</td>
+                            </tr>
+                            <tr>
+                                <td><code>INC-2026-002</code></td>
+                                <td>2026-10-07 09:45:10</td>
+                                <td>Camera 1 (North Gate)</td>
+                                <td><strong style="color: #f59e0b;">5 People</strong></td>
+                                <td><span class="badge-status" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b;">WARNING (&gt;3)</span></td>
+                                <td>Patrol Officer Notified</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-
-
-
 
     </main>
 
@@ -767,14 +1006,32 @@
             const toast = document.getElementById('toastNotice');
             toast.textContent = msg;
             toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+            setTimeout(() => { toast.style.display = 'none'; }, 2600);
         }
 
-        function switchTab(tabId) {
+        function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            
+            const targetPane = document.getElementById(tabId);
+            if (targetPane) targetPane.classList.add('active');
+
+            if (btnElement) {
+                btnElement.classList.add('active');
+            } else {
+                const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+                if (btn) btn.classList.add('active');
+            }
+        }
+
+        function updateRulePreviews() {
+            const safe = parseInt(document.getElementById('inputSafeThreshold').value) || 3;
+            const crit = parseInt(document.getElementById('inputCriticalThreshold').value) || 7;
+            
+            document.getElementById('previewSafe').textContent = `🟢 Safe: ≤ ${safe} people`;
+            document.getElementById('previewWarning').textContent = `🟡 Warning: ${safe + 1} to ${crit} people`;
+            document.getElementById('previewCritical').textContent = `🔴 Critical Surge: > ${crit} people`;
+            document.getElementById('kpiRulesSummary').textContent = `Safe ≤${safe} | Surge >${crit}`;
         }
 
         // Fetch Data & Populate Camera Table
@@ -791,26 +1048,36 @@
                 const camKeys = Object.keys(cams);
                 document.getElementById('kpiCamCount').textContent = `${camKeys.length} Streams`;
 
-                camKeys.forEach(cid => {
-                    const c = cams[cid];
-                    const isConn = c.connected;
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><code>${cid}</code></td>
-                        <td><strong>${c.name}</strong></td>
-                        <td><code>${c.ip}</code></td>
-                        <td style="color: #94a3b8; font-family: monospace; font-size: 11px;">${c.url}</td>
-                        <td>
-                            <span class="badge-status ${isConn ? 'badge-online' : 'badge-disabled'}">
-                                ${isConn ? '● LIVE' : '● OFFLINE'}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn-table-action btn-delete" onclick="handleDeleteCamera('${cid}')">Delete</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                if (camKeys.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #8da2c0; padding: 24px;">No camera streams configured yet.</td></tr>`;
+                } else {
+                    camKeys.forEach(cid => {
+                        const c = cams[cid];
+                        const isConn = c.connected;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><code>${cid}</code></td>
+                            <td><strong>${c.name}</strong></td>
+                            <td><code>${c.ip}</code></td>
+                            <td style="color: #94a3b8; font-family: monospace; font-size: 11px; word-break: break-all;">${c.url}</td>
+                            <td>
+                                <span class="badge-status ${isConn ? 'badge-online' : 'badge-disabled'}">
+                                    ${isConn ? '● LIVE' : '● OFFLINE'}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <button class="btn-table-action btn-delete" onclick="handleDeleteCamera('${cid}')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
 
                 if (data.safe_threshold !== undefined) {
                     document.getElementById('inputSafeThreshold').value = data.safe_threshold;
@@ -818,9 +1085,10 @@
                 if (data.critical_threshold !== undefined) {
                     document.getElementById('inputCriticalThreshold').value = data.critical_threshold;
                 }
+                updateRulePreviews();
 
             } catch (e) {
-                console.error(e);
+                console.error("Admin fetch error:", e);
             }
         }
 
@@ -842,7 +1110,7 @@
                 document.getElementById('addCamForm').reset();
                 fetchAdminData();
             } else {
-                alert('Error adding camera: ' + data.error);
+                alert('Error adding camera: ' + (data.error || 'Unknown error'));
             }
         }
 
@@ -857,6 +1125,8 @@
             if (data.success) {
                 showToast(`Camera ${camId} removed.`);
                 fetchAdminData();
+            } else {
+                alert('Error deleting camera: ' + (data.error || 'Failed'));
             }
         }
 
@@ -864,6 +1134,12 @@
             e.preventDefault();
             const safe = parseInt(document.getElementById('inputSafeThreshold').value);
             const crit = parseInt(document.getElementById('inputCriticalThreshold').value);
+            
+            if (safe >= crit) {
+                alert("Safe threshold must be less than critical threshold.");
+                return;
+            }
+
             const res = await fetch('/api/admin/thresholds/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -872,25 +1148,28 @@
             const data = await res.json();
             if (data.success) {
                 showToast('Threshold rules updated in real-time!');
+                updateRulePreviews();
             }
         }
 
-
-
         function testAudioAlert() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.3, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.3);
-            showToast('🔊 Audio alert siren test played.');
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.35);
+                gain.gain.setValueAtTime(0.35, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.35);
+                showToast('🔊 Audio alert siren test played.');
+            } catch (err) {
+                alert('AudioContext not allowed or not supported.');
+            }
         }
 
         function exportIncidentLog() {
@@ -906,9 +1185,9 @@
             showToast('Incident audit report downloaded.');
         }
 
-        // Initial Load
+        // Initial Load & polling
         fetchAdminData();
-        setInterval(fetchAdminData, 3000);
+        setInterval(fetchAdminData, 4000);
     </script>
 </body>
 
