@@ -964,6 +964,8 @@
             }
         }
 
+        let isThresholdEditing = false;
+
         function updateRulePreviews() {
             const safe = parseInt(document.getElementById('inputSafeThreshold').value) || 3;
             const crit = parseInt(document.getElementById('inputCriticalThreshold').value) || 7;
@@ -972,6 +974,17 @@
             document.getElementById('previewWarning').textContent = `🟡 Warning: ${safe + 1} to ${crit} people`;
             document.getElementById('previewCritical').textContent = `🔴 Critical Surge: > ${crit} people`;
             document.getElementById('kpiRulesSummary').textContent = `Safe ≤${safe} | Surge >${crit}`;
+        }
+
+        const safeInputElem = document.getElementById('inputSafeThreshold');
+        const critInputElem = document.getElementById('inputCriticalThreshold');
+        if (safeInputElem) {
+            safeInputElem.addEventListener('focus', () => { isThresholdEditing = true; });
+            safeInputElem.addEventListener('input', () => { isThresholdEditing = true; updateRulePreviews(); });
+        }
+        if (critInputElem) {
+            critInputElem.addEventListener('focus', () => { isThresholdEditing = true; });
+            critInputElem.addEventListener('input', () => { isThresholdEditing = true; updateRulePreviews(); });
         }
 
         // Fetch Data & Populate Camera Table
@@ -1019,13 +1032,19 @@
                     });
                 }
 
-                if (data.safe_threshold !== undefined) {
-                    document.getElementById('inputSafeThreshold').value = data.safe_threshold;
+                if (!isThresholdEditing) {
+                    if (data.safe_threshold !== undefined) {
+                        document.getElementById('inputSafeThreshold').value = data.safe_threshold;
+                    }
+                    if (data.critical_threshold !== undefined) {
+                        document.getElementById('inputCriticalThreshold').value = data.critical_threshold;
+                    }
+                    updateRulePreviews();
+                } else {
+                    const safe = parseInt(document.getElementById('inputSafeThreshold').value) || data.safe_threshold || 3;
+                    const crit = parseInt(document.getElementById('inputCriticalThreshold').value) || data.critical_threshold || 7;
+                    document.getElementById('kpiRulesSummary').textContent = `Safe ≤${safe} | Surge >${crit}`;
                 }
-                if (data.critical_threshold !== undefined) {
-                    document.getElementById('inputCriticalThreshold').value = data.critical_threshold;
-                }
-                updateRulePreviews();
 
             } catch (e) {
                 console.error("Admin fetch error:", e);
@@ -1072,27 +1091,49 @@
 
         async function handleUpdateThresholds(e) {
             e.preventDefault();
-            const safe = parseInt(document.getElementById('inputSafeThreshold').value);
-            const crit = parseInt(document.getElementById('inputCriticalThreshold').value);
+            const safeInput = document.getElementById('inputSafeThreshold');
+            const critInput = document.getElementById('inputCriticalThreshold');
+            const safe = parseInt(safeInput.value);
+            const crit = parseInt(critInput.value);
             
+            if (isNaN(safe) || isNaN(crit)) {
+                alert("Please enter valid numbers for thresholds.");
+                return;
+            }
+
+            if (safe < 1) {
+                alert("Safe threshold must be at least 1 person.");
+                return;
+            }
+
             if (safe >= crit) {
                 alert("Safe threshold must be less than critical threshold.");
                 return;
             }
 
-            const res = await fetch('/api/admin/thresholds/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ safe, critical: crit })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('Threshold rules updated in real-time!');
-                updateRulePreviews();
+            try {
+                const res = await fetch('/api/admin/thresholds/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ safe, critical: crit })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    isThresholdEditing = false;
+                    safeInput.value = data.safe;
+                    critInput.value = data.critical;
+                    safeInput.blur();
+                    critInput.blur();
+                    updateRulePreviews();
+                    showToast(`Threshold rules saved: Safe ≤ ${data.safe}, Surge > ${data.critical}`);
+                } else {
+                    alert('Error updating thresholds: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error("Error updating thresholds:", err);
+                alert("Network error updating thresholds.");
             }
         }
-
-
 
         function exportIncidentLog() {
             const incidents = [

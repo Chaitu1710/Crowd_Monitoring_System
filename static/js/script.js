@@ -39,11 +39,43 @@ const cam2LivePill = document.getElementById("cam2LivePill");
 // DOM Cache - Event Log Table
 const eventLogTableBody = document.getElementById("eventLogTableBody");
 
+// DOM Cache - Sidebar Risk Rules
+const sidebarSafeCount = document.getElementById("sidebarSafeCount");
+const sidebarWarningCount = document.getElementById("sidebarWarningCount");
+const sidebarCriticalCount = document.getElementById("sidebarCriticalCount");
+
+// DOM Cache - System Status
+const sysStatusTitle = document.getElementById("sysStatusTitle");
+const sysStatusSub = document.getElementById("sysStatusSub");
+
 // State
 let lastAlertStates = {
     cam1: null,
     cam2: null
 };
+let currentSafeThreshold = 3;
+let currentCriticalThreshold = 7;
+let thresholdsInitialized = false;
+
+function updateSidebarThresholdDisplay(safe, crit) {
+    if (sidebarSafeCount) sidebarSafeCount.textContent = `≤ ${safe} People`;
+    if (sidebarWarningCount) sidebarWarningCount.textContent = `> ${safe} People`;
+    if (sidebarCriticalCount) sidebarCriticalCount.textContent = `> ${crit} People`;
+}
+
+function updateSystemStatus(status) {
+    if (!sysStatusTitle || !sysStatusSub) return;
+    if (status === "CRITICAL") {
+        sysStatusTitle.textContent = "CRITICAL ALERT";
+        sysStatusSub.textContent = "Crowd surge threshold breached";
+    } else if (status === "WARNING") {
+        sysStatusTitle.textContent = "WARNING ACTIVE";
+        sysStatusSub.textContent = "Elevated crowd density";
+    } else {
+        sysStatusTitle.textContent = "SYSTEM ONLINE";
+        sysStatusSub.textContent = "All systems operational";
+    }
+}
 
 
 // ==================================================
@@ -160,12 +192,9 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
         sideStatusElem.className = statusClass;
     }
 
-    // 4. Risk Classification & Red Alert Border Logic
-    // Safe: count <= 3
-    // Warning: count > 3 and count <= 7
-    // Critical: count > 7
-    const isCritical = count > 7;
-    const isWarning = count > 3 && count <= 7;
+    // 4. Dynamic Risk Classification & Alert Logic based on configured thresholds
+    const isCritical = camInfo.risk_level === "CRITICAL" || count > currentCriticalThreshold;
+    const isWarning = !isCritical && (camInfo.risk_level === "WARNING" || count > currentSafeThreshold);
     const hasAlert = isCritical || isWarning;
 
     if (isCritical) {
@@ -180,7 +209,7 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
 
         // Stat Zone Risk Label
         if (zoneRiskElem) {
-            zoneRiskElem.textContent = "CRITICAL (>7)";
+            zoneRiskElem.textContent = camInfo.zone_risk || `CRITICAL (>${currentCriticalThreshold})`;
             zoneRiskElem.className = "stat-risk-label val-critical";
         }
 
@@ -190,7 +219,7 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
 
         // Check state change for log
         if (lastAlertStates[camKey] !== "CRITICAL") {
-            addEventLogRow(camName, "Critical crowd density detected", `${count} people detected (Zone: CRITICAL >7)`, true);
+            addEventLogRow(camName, "Critical crowd density detected", `${count} people detected (Zone: CRITICAL >${currentCriticalThreshold})`, true);
             lastAlertStates[camKey] = "CRITICAL";
         }
 
@@ -204,7 +233,7 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
         }
 
         if (zoneRiskElem) {
-            zoneRiskElem.textContent = "WARNING (>3)";
+            zoneRiskElem.textContent = camInfo.zone_risk || `WARNING (>${currentSafeThreshold})`;
             zoneRiskElem.className = "stat-risk-label val-warning";
         }
 
@@ -212,7 +241,7 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
         if (zoneIconElem) zoneIconElem.className = "stat-icon-wrapper blue";
 
         if (lastAlertStates[camKey] !== "WARNING") {
-            addEventLogRow(camName, "Elevated crowd density warning", `${count} people detected (Zone: WARNING >3)`, true);
+            addEventLogRow(camName, "Elevated crowd density warning", `${count} people detected (Zone: WARNING >${currentSafeThreshold})`, true);
             lastAlertStates[camKey] = "WARNING";
         }
 
@@ -226,7 +255,7 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
         }
 
         if (zoneRiskElem) {
-            zoneRiskElem.textContent = "SAFE (<3)";
+            zoneRiskElem.textContent = camInfo.zone_risk || `SAFE (≤${currentSafeThreshold})`;
             zoneRiskElem.className = "stat-risk-label val-safe";
         }
 
@@ -234,7 +263,7 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
         if (zoneIconElem) zoneIconElem.className = "stat-icon-wrapper blue";
 
         if (lastAlertStates[camKey] !== "SAFE" && lastAlertStates[camKey] !== null) {
-            addEventLogRow(camName, "Normal crowd density", `${count} people detected (Zone: SAFE ≤3)`, false);
+            addEventLogRow(camName, "Normal crowd density", `${count} people detected (Zone: SAFE ≤${currentSafeThreshold})`, false);
             lastAlertStates[camKey] = "SAFE";
         } else if (lastAlertStates[camKey] === null) {
             lastAlertStates[camKey] = "SAFE";
@@ -253,6 +282,31 @@ async function fetchPeopleData() {
         if (!response.ok) return;
 
         const data = await response.json();
+
+        // Dynamically synchronize thresholds from server
+        if (data.safe_threshold !== undefined && data.critical_threshold !== undefined) {
+            const newSafe = parseInt(data.safe_threshold);
+            const newCrit = parseInt(data.critical_threshold);
+
+            if (thresholdsInitialized && (newSafe !== currentSafeThreshold || newCrit !== currentCriticalThreshold)) {
+                addEventLogRow(
+                    "System",
+                    "Safety threshold rules updated",
+                    `Safe (≤${newSafe}), Warning (>${newSafe}), Critical (>${newCrit})`,
+                    false,
+                    true
+                );
+            }
+
+            currentSafeThreshold = newSafe;
+            currentCriticalThreshold = newCrit;
+            thresholdsInitialized = true;
+
+            updateSidebarThresholdDisplay(currentSafeThreshold, currentCriticalThreshold);
+        }
+
+        updateSystemStatus(data.status);
+
         const cameras = data.cameras || {};
 
         // Update Camera 1
@@ -307,7 +361,7 @@ function initializeSystem() {
     setInterval(updateClock, 1000);
 
     // 2. Pre-populate System Startup Events matching screenshot
-    addEventLogRow("System", "Zone risk rules active", "Safe (≤3), Warning (>3), Critical (>7)", false, true);
+    addEventLogRow("System", "Zone risk rules active", "Dynamic safety thresholds enabled", false, true);
     addEventLogRow("System", "YOLO object tracking enabled", "Real-time person detection and tracking", false, true);
     addEventLogRow("System", "Density heatmap overlay active", "Gaussian JET colormap enabled for both cameras", false, true);
 

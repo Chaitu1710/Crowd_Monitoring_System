@@ -26,6 +26,7 @@ import numpy as np
 import os
 import psutil
 
+import config
 from config import (
     CAMERAS,
     HOST,
@@ -38,6 +39,31 @@ from config import (
     USERS,
     SECRET_KEY
 )
+
+def save_thresholds_to_config(safe, critical):
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.py")
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        import re
+        content = re.sub(r"THRESHOLD_SAFE\s*=\s*\d+", f"THRESHOLD_SAFE = {safe}", content)
+        content = re.sub(r"THRESHOLD_CRITICAL\s*=\s*\d+", f"THRESHOLD_CRITICAL = {critical}", content)
+        with open(config_path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        # Clear compiled bytecode cache so future startups pick up updated config
+        cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "__pycache__")
+        if os.path.exists(cache_dir):
+            for fname in os.listdir(cache_dir):
+                if fname.startswith("config.") and fname.endswith(".pyc"):
+                    try:
+                        os.remove(os.path.join(cache_dir, fname))
+                    except Exception:
+                        pass
+
+        print(f"[Config] Saved to config.py: THRESHOLD_SAFE={safe}, THRESHOLD_CRITICAL={critical}")
+    except Exception as e:
+        print(f"[Config] Error writing thresholds to config.py: {e}")
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = SECRET_KEY
@@ -599,22 +625,28 @@ def people():
         overall_status = "NORMAL"
 
     camera_details = {}
-    for cam_id, config in current_cameras.items():
+    for cam_id, cam_cfg in current_cameras.items():
         c_count = counts.get(cam_id, 0)
         zone_label, _, risk_level = classify_zone_risk(c_count)
         has_alert = c_count > current_safe_threshold
+        if c_count > current_critical_threshold:
+            alert_msg = f"Critical crowd surge at {cam_cfg.get('name', cam_id)} ({c_count} people)"
+        elif c_count > current_safe_threshold:
+            alert_msg = f"High crowd detected at {cam_cfg.get('name', cam_id)} ({c_count} people)"
+        else:
+            alert_msg = ""
 
         camera_details[cam_id] = {
-            "name": config.get("name", cam_id),
-            "ip": config.get("ip", "N/A"),
-            "url": config.get("url", ""),
+            "name": cam_cfg.get("name", cam_id),
+            "ip": cam_cfg.get("ip", "N/A"),
+            "url": cam_cfg.get("url", ""),
             "count": c_count,
             "unique_tracks": track_ids_copy.get(cam_id, 0),
             "zone_risk": zone_label,
             "risk_level": risk_level,
             "connected": connected.get(cam_id, False),
             "has_alert": has_alert,
-            "alert_message": f"High crowd detected at {config.get('name', cam_id)} ({c_count} people)" if has_alert else ""
+            "alert_message": alert_msg
         }
 
     return jsonify({
@@ -622,6 +654,8 @@ def people():
         "critical_zone_active": critical_active,
         "warning_zone_active": warning_active,
         "alert_cameras": warning_cams,
+        "safe_threshold": current_safe_threshold,
+        "critical_threshold": current_critical_threshold,
         "cameras": camera_details,
         "timestamp": time.time()
     })
@@ -716,11 +750,28 @@ def admin_update_thresholds():
     critical = data.get("critical")
 
     if safe is not None:
-        current_safe_threshold = int(safe)
-    if critical is not None:
-        current_critical_threshold = int(critical)
+        try:
+            safe_val = int(safe)
+            current_safe_threshold = safe_val
+            config.THRESHOLD_SAFE = safe_val
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "Invalid safe threshold."}), 400
 
-    return jsonify({"success": True, "safe": current_safe_threshold, "critical": current_critical_threshold})
+    if critical is not None:
+        try:
+            crit_val = int(critical)
+            current_critical_threshold = crit_val
+            config.THRESHOLD_CRITICAL = crit_val
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "Invalid critical threshold."}), 400
+
+    save_thresholds_to_config(current_safe_threshold, current_critical_threshold)
+
+    return jsonify({
+        "success": True,
+        "safe": current_safe_threshold,
+        "critical": current_critical_threshold
+    })
 
 
 @app.route("/api/admin/ai/update", methods=["POST"])
