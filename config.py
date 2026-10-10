@@ -27,8 +27,8 @@ CAMERAS = {
     "cam1": {
         "id": "cam1",
         "name": "Camera 1",
-        "url": "http://100.64.204.38:8080/video",
-        "ip": "100.64.204.38:8080",
+        "url": "http://100.101.219.72:8080/video",
+        "ip": "100.101.219.72:8080",
         "enabled": True
     },
     "cam2": {
