@@ -53,5 +53,5 @@ IMG_SIZE = 640
 # Normal / Safe : <= 3 People
 # Warning       : > 3 People and <= 7 People
 # Critical Alert: > 7 People
-THRESHOLD_SAFE = 4
-THRESHOLD_CRITICAL = 8
+THRESHOLD_SAFE = 40
+THRESHOLD_CRITICAL = 80
