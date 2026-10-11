@@ -370,5 +370,124 @@ function initializeSystem() {
     setInterval(fetchPeopleData, 1000);
 }
 
+
+// ==================================================
+// DYNAMIC CAMERA ENDPOINT MODAL & SWITCHING
+// ==================================================
+
+function showToast(msg) {
+    const toast = document.getElementById("toastNotice");
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.display = "block";
+    setTimeout(() => {
+        toast.style.display = "none";
+    }, 3200);
+}
+
+function openChangeIpModal(camId, defaultName) {
+    const modal = document.getElementById("changeIpModal");
+    if (!modal) return;
+
+    const idInput = document.getElementById("modalCamId");
+    const nameInput = document.getElementById("modalCamName");
+    const endpointInput = document.getElementById("modalCamEndpoint");
+    const titleElem = document.getElementById("modalCamTitle");
+
+    idInput.value = camId;
+    titleElem.textContent = `Change ${defaultName} Endpoint`;
+    nameInput.value = defaultName;
+
+    // Pre-fill with current displayed IP
+    const currentIpElem = document.getElementById(`${camId}IpText`);
+    const currentIp = currentIpElem ? currentIpElem.textContent.trim() : "";
+    endpointInput.value = currentIp;
+
+    modal.style.display = "flex";
+    setTimeout(() => endpointInput.focus(), 50);
+}
+
+function closeChangeIpModal() {
+    const modal = document.getElementById("changeIpModal");
+    if (modal) modal.style.display = "none";
+}
+
+function closeModalOnBackdrop(e) {
+    if (e.target && e.target.id === "changeIpModal") {
+        closeChangeIpModal();
+    }
+}
+
+async function submitChangeIp(e) {
+    e.preventDefault();
+
+    const camId = document.getElementById("modalCamId").value.trim();
+    const name = document.getElementById("modalCamName").value.trim();
+    const endpoint = document.getElementById("modalCamEndpoint").value.trim();
+    const submitBtn = document.getElementById("btnModalSubmit");
+    const submitText = document.getElementById("btnModalText");
+
+    if (!endpoint) {
+        alert("Please enter a valid IP address or stream URL.");
+        return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+    if (submitText) submitText.textContent = "Connecting...";
+
+    try {
+        const response = await fetch("/api/camera/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: camId, name: name, endpoint: endpoint })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.camera) {
+            closeChangeIpModal();
+
+            const updatedCam = data.camera;
+
+            // 1. Force refresh the MJPEG image element
+            const feedImg = document.getElementById(camId === "cam1" ? "cameraFeed1" : "cameraFeed2");
+            if (feedImg) {
+                feedImg.src = `/video_feed/${camId}?t=${Date.now()}`;
+            }
+
+            // 2. Update IP labels on dashboard
+            const ipLabel = document.getElementById(`${camId}IpText`);
+            if (ipLabel) ipLabel.textContent = updatedCam.ip;
+
+            const sideIp = document.getElementById(camId === "cam1" ? "sideCam1Ip" : "sideCam2Ip");
+            if (sideIp) sideIp.textContent = updatedCam.ip;
+
+            // 3. Add to event log
+            addEventLogRow(
+                updatedCam.name || camId,
+                "Camera IP endpoint updated",
+                `Connected to ${updatedCam.ip} (saved to config.py)`,
+                false,
+                true
+            );
+
+            // 4. Show toast notification
+            showToast(`✓ ${updatedCam.name} switched to ${updatedCam.ip}`);
+
+            // 5. Trigger immediate telemetry polling
+            fetchPeopleData();
+        } else {
+            alert(`Error updating camera: ${data.error || "Unknown error"}`);
+        }
+    } catch (err) {
+        console.error("Error updating camera endpoint:", err);
+        alert("Failed to communicate with server to update camera.");
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.textContent = "⚡ Switch Stream & Save";
+    }
+}
+
 // Start
 document.addEventListener("DOMContentLoaded", initializeSystem);
+

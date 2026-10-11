@@ -64,6 +64,9 @@ function showToast(msg) {
                         const c = cams[cid];
                         const isConn = c.connected;
                         const tr = document.createElement('tr');
+                        const safeName = (c.name || '').replace(/'/g, "\\'");
+                        const safeIp = (c.ip || '').replace(/'/g, "\\'");
+                        const safeUrl = (c.url || '').replace(/'/g, "\\'");
                         tr.innerHTML = `
                             <td><code>${cid}</code></td>
                             <td><strong>${c.name}</strong></td>
@@ -75,13 +78,22 @@ function showToast(msg) {
                                 </span>
                             </td>
                             <td style="text-align: right;">
-                                <button class="btn-table-action btn-delete" onclick="handleDeleteCamera('${cid}')">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                    Delete
-                                </button>
+                                <div style="display: inline-flex; gap: 8px;">
+                                    <button class="btn-table-action btn-edit-ip" onclick="openAdminEditModal('${cid}', '${safeName}', '${safeIp}', '${safeUrl}')">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 20h9"/>
+                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                        </svg>
+                                        Edit IP
+                                    </button>
+                                    <button class="btn-table-action btn-delete" onclick="handleDeleteCamera('${cid}')">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </div>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -144,6 +156,68 @@ function showToast(msg) {
                 alert('Error deleting camera: ' + (data.error || 'Failed'));
             }
         }
+
+        function openAdminEditModal(camId, name, ip, url) {
+            const modal = document.getElementById('adminEditCameraModal');
+            if (!modal) return;
+
+            document.getElementById('adminEditCamId').value = camId;
+            document.getElementById('adminModalTitle').textContent = `Edit Stream: ${name || camId}`;
+            document.getElementById('adminEditCamName').value = name || camId;
+            document.getElementById('adminEditCamEndpoint').value = ip || url || '';
+
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('adminEditCamEndpoint').focus(), 50);
+        }
+
+        function closeAdminEditModal() {
+            const modal = document.getElementById('adminEditCameraModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function closeAdminModalOnBackdrop(e) {
+            if (e.target && e.target.id === 'adminEditCameraModal') {
+                closeAdminEditModal();
+            }
+        }
+
+        async function handleAdminUpdateCamera(e) {
+            e.preventDefault();
+            const id = document.getElementById('adminEditCamId').value.trim();
+            const name = document.getElementById('adminEditCamName').value.trim();
+            const endpoint = document.getElementById('adminEditCamEndpoint').value.trim();
+            const submitBtn = document.getElementById('adminBtnModalSubmit');
+
+            if (!endpoint) {
+                alert('Please enter a valid IP address or stream URL.');
+                return;
+            }
+
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/cameras/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, name, endpoint })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    closeAdminEditModal();
+                    showToast(`Camera ${name} updated to ${data.camera.ip}!`);
+                    fetchAdminData();
+                } else {
+                    alert('Error updating camera: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Error updating camera:', err);
+                alert('Network communication error updating camera.');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        }
+
 
         async function handleUpdateThresholds(e) {
             e.preventDefault();

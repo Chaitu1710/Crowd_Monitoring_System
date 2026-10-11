@@ -301,6 +301,51 @@
 
     </main>
 
+    <!-- ADMIN EDIT CAMERA MODAL -->
+    <div id="adminEditCameraModal" class="quick-modal-backdrop" style="display: none;" onclick="closeAdminModalOnBackdrop(event)">
+        <div class="quick-modal-card">
+            <div class="quick-modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="modal-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="adminModalTitle">Edit Camera Stream</h3>
+                        <p style="font-size: 12px; color: #8da2c0; margin-top: 2px;">Update IP, RTSP, or HTTP target endpoint</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-btn" onclick="closeAdminEditModal()" title="Close">&times;</button>
+            </div>
+
+            <form id="adminEditCamForm" onsubmit="handleAdminUpdateCamera(event)">
+                <input type="hidden" id="adminEditCamId">
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Camera Display Name</label>
+                    <input type="text" id="adminEditCamName" class="quick-modal-input" placeholder="Camera Name" required>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">IP Address / Stream URL</label>
+                    <input type="text" id="adminEditCamEndpoint" class="quick-modal-input" placeholder="e.g. 192.168.1.15:8080 or http://192.168.1.15:8080/video" required>
+                    <div class="modal-help-tip">
+                        <span>💡 <strong>Tip:</strong> Supports raw IP (e.g. <code>192.168.1.15:8080</code>), HTTP MJPEG stream, RTSP, or USB webcam index. Saves automatically to <code>config.py</code>.</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px;">
+                    <button type="button" class="btn-modal-cancel" onclick="closeAdminEditModal()">Cancel</button>
+                    <button type="submit" id="adminBtnModalSubmit" class="btn-modal-save">
+                        <span>⚡ Save & Update Stream</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
     <div id="toastNotice">Settings saved successfully!</div>
 

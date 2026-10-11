@@ -71,3 +71,54 @@ def save_thresholds_to_config(safe, critical):
         print(f"[Config] Saved to config.py: THRESHOLD_SAFE={safe}, THRESHOLD_CRITICAL={critical}")
     except Exception as e:
         print(f"[Config] Error writing thresholds to config.py: {e}")
+
+
+def save_cameras_to_config():
+    """
+    Persists active current_cameras dictionary to config.py on disk
+    so server restarts maintain configured IP streams.
+    """
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(root_dir, "config.py")
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        import re
+
+        lines = ["CAMERAS = {"]
+        for cid, cinfo in current_cameras.items():
+            lines.append(f'    "{cid}": {{')
+            lines.append(f'        "id": "{cinfo.get("id", cid)}",')
+            lines.append(f'        "name": "{cinfo.get("name", cid)}",')
+            lines.append(f'        "url": "{cinfo.get("url", "")}",')
+            lines.append(f'        "ip": "{cinfo.get("ip", "")}",')
+            enabled_str = "True" if cinfo.get("enabled", True) else "False"
+            lines.append(f'        "enabled": {enabled_str}')
+            lines.append('    },')
+        lines.append("}")
+        formatted_cams = "\n".join(lines)
+
+        content = re.sub(r"CAMERAS\s*=\s*\{.*?\n\}", formatted_cams, content, flags=re.DOTALL)
+
+        with open(config_path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        config.CAMERAS = {k: dict(v) for k, v in current_cameras.items()}
+
+        cache_dir = os.path.join(root_dir, "__pycache__")
+        if os.path.exists(cache_dir):
+            for fname in os.listdir(cache_dir):
+                if fname.startswith("config.") and fname.endswith(".pyc"):
+                    try:
+                        os.remove(os.path.join(cache_dir, fname))
+                    except Exception:
+                        pass
+
+        print("[Config] Saved updated cameras to config.py successfully.")
+        return True
+    except Exception as e:
+        print(f"[Config] Error writing cameras to config.py: {e}")
+        return False
+

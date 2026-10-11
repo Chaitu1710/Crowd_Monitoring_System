@@ -94,6 +94,13 @@
                         <div class="cam-top-badges">
                             <span id="cam1ZoneBadge" class="badge-zone badge-safe">SAFE ZONE</span>
                             <span id="cam1StatusBadge" class="badge-conn badge-offline">● OFFLINE</span>
+                            <button type="button" class="btn-change-ip" onclick="openChangeIpModal('cam1', 'Camera 1')" title="Change Mobile Stream IP / URL">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 20h9"/>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                </svg>
+                                Change IP
+                            </button>
                         </div>
                     </div>
 
@@ -157,6 +164,13 @@
                         <div class="cam-top-badges">
                             <span id="cam2ZoneBadge" class="badge-zone badge-safe">SAFE ZONE</span>
                             <span id="cam2StatusBadge" class="badge-conn badge-offline">● OFFLINE</span>
+                            <button type="button" class="btn-change-ip" onclick="openChangeIpModal('cam2', 'Camera 2')" title="Change Mobile Stream IP / URL">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 20h9"/>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                </svg>
+                                Change IP
+                            </button>
                         </div>
                     </div>
 
@@ -346,6 +360,55 @@
         </section>
 
     </main>
+
+    <!-- QUICK CHANGE CAMERA IP MODAL -->
+    <div id="changeIpModal" class="quick-modal-backdrop" style="display: none;" onclick="closeModalOnBackdrop(event)">
+        <div class="quick-modal-card">
+            <div class="quick-modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="modal-icon-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 id="modalCamTitle">Change Camera Endpoint</h3>
+                        <p style="font-size: 12px; color: #8da2c0; margin-top: 2px;">Connect mobile IP Webcam or network camera dynamically</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-btn" onclick="closeChangeIpModal()" title="Close">&times;</button>
+            </div>
+
+            <form id="changeIpForm" onsubmit="submitChangeIp(event)">
+                <input type="hidden" id="modalCamId" value="cam1">
+                
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Camera Display Name</label>
+                    <input type="text" id="modalCamName" class="quick-modal-input" placeholder="Camera 1">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Mobile Webcam IP or URL</label>
+                    <input type="text" id="modalCamEndpoint" class="quick-modal-input" placeholder="e.g. 192.168.1.15:8080 or http://192.168.1.15:8080/video" required>
+                    
+                    <div class="modal-help-tip">
+                        <span>💡 <strong>Tip:</strong> Just enter the IP from your phone screen (e.g. <code>192.168.1.5:8080</code>). We automatically add <code>/video</code> and update <code>config.py</code>.</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px;">
+                    <button type="button" class="btn-modal-cancel" onclick="closeChangeIpModal()">Cancel</button>
+                    <button type="submit" id="btnModalSubmit" class="btn-modal-save">
+                        <span id="btnModalText">⚡ Switch Stream & Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastNotice" class="toast-notice">Camera connected successfully!</div>
 
     <script src="/static/js/script.js"></script>
 </body>

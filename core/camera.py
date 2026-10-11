@@ -126,6 +126,21 @@ class IPCameraCapture:
                 self.cap = None
                 time.sleep(0.5)
 
+    def update_url(self, new_url):
+        with self.lock:
+            if str(self.url) == str(new_url):
+                return
+            print(f"[CameraReader] Updating stream URL to: {new_url}")
+            self.url = new_url
+            self.connected = False
+            self.current_frame = None
+            if self.cap:
+                try:
+                    self.cap.release()
+                except Exception:
+                    pass
+                self.cap = None
+
     def read(self):
         with self.lock:
             if self.connected and self.current_frame is not None:
@@ -138,6 +153,89 @@ class IPCameraCapture:
             self.cap.release()
 
 
+def normalize_camera_input(input_val):
+    """
+    Parses user input into (ip_label, stream_url).
+    Supports raw IPs, host:port, URLs, RTSP, and local webcam indices.
+    """
+    raw = str(input_val).strip()
+    if not raw:
+        return "", ""
+
+    # Webcam index (e.g. 0, 1)
+    if raw.isdigit() and len(raw) <= 2:
+        return f"Local USB ({raw})", raw
+
+    # RTSP stream
+    if raw.lower().startswith("rtsp://"):
+        return raw, raw
+
+    clean = raw.rstrip("/")
+
+    # If missing http/https prefix
+    if not clean.lower().startswith("http://") and not clean.lower().startswith("https://"):
+        parts = clean.split("/")
+        host_part = parts[0]
+        # Append default port 8080 if not specified
+        if ":" not in host_part:
+            host_part = f"{host_part}:8080"
+            remainder = "/".join(parts[1:])
+            clean = f"{host_part}/{remainder}".rstrip("/")
+        full_url = f"http://{clean}"
+    else:
+        full_url = clean
+
+    from urllib.parse import urlparse
+    parsed = urlparse(full_url)
+    ip_label = parsed.netloc or parsed.path
+
+    if not parsed.path or parsed.path == "/":
+        final_url = f"{parsed.scheme}://{parsed.netloc}/video"
+    else:
+        final_url = full_url
+
+    return ip_label, final_url
+
+
+def update_camera_endpoint(cam_id, endpoint_input, name=None):
+    """
+    Dynamically updates a camera's IP endpoint and video URL in runtime,
+    switches background ingestion, and persists to config.py.
+    """
+    if not cam_id:
+        return False, "Camera ID is required."
+
+    ip_label, stream_url = normalize_camera_input(endpoint_input)
+    if not stream_url:
+        return False, "Invalid camera IP address or stream URL."
+
+    if cam_id not in state.current_cameras:
+        state.current_cameras[cam_id] = {
+            "id": cam_id,
+            "name": name or f"Camera {cam_id}",
+            "ip": ip_label,
+            "url": stream_url,
+            "enabled": True
+        }
+    else:
+        state.current_cameras[cam_id]["ip"] = ip_label
+        state.current_cameras[cam_id]["url"] = stream_url
+        if name:
+            state.current_cameras[cam_id]["name"] = name
+
+    with state.frame_lock:
+        state.camera_connected[cam_id] = False
+
+    # Spawn thread if not active
+    if cam_id not in state.camera_threads or not state.camera_threads[cam_id].is_alive():
+        start_camera_thread(cam_id)
+
+    # Persist changes to config.py on disk
+    state.save_cameras_to_config()
+
+    return True, state.current_cameras[cam_id]
+
+
 def ai_camera_loop(cam_id):
     """Background worker loop executing real-time person tracking and overlay drawing."""
     if cam_id not in state.current_cameras:
@@ -146,6 +244,7 @@ def ai_camera_loop(cam_id):
     cam_config = state.current_cameras[cam_id]
     cam_name = cam_config.get("name", cam_id)
     cam_url = cam_config.get("url", "")
+    current_active_url = cam_url
 
     print(f"[{cam_name}] Worker thread started for URL: {cam_url}")
     cam_reader = IPCameraCapture(cam_url)
@@ -155,6 +254,15 @@ def ai_camera_loop(cam_id):
         if cam_id not in state.current_cameras:
             cam_reader.stop()
             break
+
+        # Check if URL was dynamically changed in runtime
+        updated_cfg = state.current_cameras.get(cam_id, {})
+        new_url = updated_cfg.get("url", "")
+        if new_url and str(new_url) != str(current_active_url):
+            cam_name = updated_cfg.get("name", cam_id)
+            print(f"[{cam_name}] Switching camera stream to new URL: {new_url}")
+            current_active_url = new_url
+            cam_reader.update_url(new_url)
 
         success, frame = cam_reader.read()
 

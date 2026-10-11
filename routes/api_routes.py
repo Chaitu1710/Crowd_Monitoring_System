@@ -10,10 +10,10 @@ import time
 import psutil
 from flask import Blueprint, Response, jsonify, request
 from core import state
-from core.auth import admin_required
-from core.camera import generate_frames, start_camera_thread
+from core.auth import admin_required, login_required
+from core.camera import generate_frames, start_camera_thread, update_camera_endpoint
 from core.risk_engine import classify_zone_risk
-from core.state import save_thresholds_to_config
+from core.state import save_thresholds_to_config, save_cameras_to_config
 
 api_bp = Blueprint("api", __name__)
 
@@ -110,6 +110,34 @@ def people():
 
 
 # ==================================================
+# DYNAMIC CAMERA ENDPOINT SWITCHING APIS
+# ==================================================
+
+@api_bp.route("/api/camera/update", methods=["POST"])
+@login_required
+def camera_update():
+    """
+    Dynamically updates a camera endpoint from the operator dashboard.
+    Reconnects background video reader and saves new IP to config.py.
+    """
+    data = request.get_json() or {}
+    cam_id = data.get("id", "").strip().lower()
+    endpoint = data.get("endpoint") or data.get("url") or data.get("ip") or ""
+    name = data.get("name")
+
+    if not cam_id:
+        return jsonify({"success": False, "error": "Camera ID is required."}), 400
+    if not endpoint:
+        return jsonify({"success": False, "error": "IP endpoint or Stream URL is required."}), 400
+
+    success, result = update_camera_endpoint(cam_id, endpoint, name=name)
+    if not success:
+        return jsonify({"success": False, "error": result}), 400
+
+    return jsonify({"success": True, "camera": result})
+
+
+# ==================================================
 # ADMIN MANAGEMENT APIS
 # ==================================================
 
@@ -144,6 +172,27 @@ def admin_info():
     })
 
 
+@api_bp.route("/api/admin/cameras/update", methods=["POST"])
+@admin_required
+def admin_update_camera():
+    """Allows administrators to edit camera stream names, endpoints, or URLs."""
+    data = request.get_json() or {}
+    cam_id = data.get("id", "").strip().lower()
+    endpoint = data.get("endpoint") or data.get("url") or data.get("ip") or ""
+    name = data.get("name")
+
+    if not cam_id:
+        return jsonify({"success": False, "error": "Camera ID is required."}), 400
+    if not endpoint:
+        return jsonify({"success": False, "error": "IP endpoint or Stream URL is required."}), 400
+
+    success, result = update_camera_endpoint(cam_id, endpoint, name=name)
+    if not success:
+        return jsonify({"success": False, "error": result}), 400
+
+    return jsonify({"success": True, "camera": result})
+
+
 @api_bp.route("/api/admin/cameras/add", methods=["POST"])
 @admin_required
 def admin_add_camera():
@@ -151,25 +200,16 @@ def admin_add_camera():
     data = request.get_json() or {}
     cam_id = data.get("id", "").strip().lower()
     name = data.get("name", "").strip()
-    ip = data.get("ip", "").strip()
-    url = data.get("url", "").strip()
+    endpoint = data.get("url") or data.get("ip") or ""
 
-    if not cam_id or not url:
-        return jsonify({"success": False, "error": "Camera ID and URL are required."}), 400
+    if not cam_id or not endpoint:
+        return jsonify({"success": False, "error": "Camera ID and endpoint URL are required."}), 400
 
-    if cam_id in state.current_cameras:
-        return jsonify({"success": False, "error": f"Camera '{cam_id}' already exists."}), 400
+    success, result = update_camera_endpoint(cam_id, endpoint, name=name)
+    if not success:
+        return jsonify({"success": False, "error": result}), 400
 
-    state.current_cameras[cam_id] = {
-        "id": cam_id,
-        "name": name or f"Camera {cam_id}",
-        "ip": ip or "Dynamic",
-        "url": url,
-        "enabled": True
-    }
-
-    start_camera_thread(cam_id)
-    return jsonify({"success": True})
+    return jsonify({"success": True, "camera": result})
 
 
 @api_bp.route("/api/admin/cameras/delete", methods=["POST"])
@@ -186,6 +226,7 @@ def admin_delete_camera():
             state.people_counts.pop(cam_id, None)
             state.camera_connected.pop(cam_id, None)
             state.active_track_ids.pop(cam_id, None)
+        save_cameras_to_config()
         return jsonify({"success": True})
 
     return jsonify({"success": False, "error": "Camera not found."}), 404
