@@ -265,19 +265,57 @@ function showToast(msg) {
             }
         }
 
+        let cachedIncidents = [];
+
+        async function fetchIncidents() {
+            try {
+                const res = await fetch('/api/admin/incidents');
+                if (!res.ok) return;
+                const incidents = await res.json();
+                cachedIncidents = incidents;
+
+                const tbody = document.getElementById('incidentsTableBody');
+                if (!tbody) return;
+
+                if (!incidents || incidents.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #8da2c0; padding: 20px;">No overcrowding incidents recorded yet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                incidents.forEach(inc => {
+                    const tr = document.createElement('tr');
+                    const isCrit = inc.severity === 'CRITICAL';
+                    tr.innerHTML = `
+                        <td><code>INC-${String(inc.id).padStart(4, '0')}</code></td>
+                        <td>${inc.timestamp}</td>
+                        <td><strong>${inc.camera_name}</strong></td>
+                        <td><strong style="color: ${isCrit ? '#ef4444' : '#f59e0b'};">${inc.peak_count} People</strong></td>
+                        <td><span class="badge-status" style="background: ${isCrit ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${isCrit ? '#ef4444' : '#f59e0b'}; border: 1px solid ${isCrit ? '#ef4444' : '#f59e0b'};">${inc.severity}</span></td>
+                        <td>${inc.action_taken}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error("Error fetching incidents:", e);
+            }
+        }
+
         function exportIncidentLog() {
-            const incidents = [
-                { id: "INC-2026-001", time: "2026-10-07 10:17:19", camera: "Camera 2", peak: 9, severity: "CRITICAL", action: "Dispersal Warning" },
-                { id: "INC-2026-002", time: "2026-10-07 09:45:10", camera: "Camera 1", peak: 5, severity: "WARNING", action: "Patrol Officer Notified" }
+            const dataToExport = cachedIncidents.length > 0 ? cachedIncidents : [
+                { note: "No incidents recorded yet" }
             ];
-            const blob = new Blob([JSON.stringify(incidents, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = `incident_report_${Date.now()}.json`;
             a.click();
-            showToast('Incident audit report downloaded.');
+            showToast('Incident audit report downloaded from SQLite.');
         }
 
         // Initial Load & polling
         fetchAdminData();
+        fetchIncidents();
         setInterval(fetchAdminData, 4000);
+        setInterval(fetchIncidents, 6000);
+

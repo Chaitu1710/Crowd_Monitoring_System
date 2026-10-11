@@ -27,15 +27,15 @@ CAMERAS = {
     "cam1": {
         "id": "cam1",
         "name": "Camera 1",
-        "url": "http://100.64.84.47:8080/video",
-        "ip": "100.64.84.47:8080",
+        "url": "http://100.80.141.31:8080/video",
+        "ip": "100.80.141.31:8080",
         "enabled": True
     },
     "cam2": {
         "id": "cam2",
         "name": "Camera 2",
-        "url": "http://192.168.31.5:8080/video",
-        "ip": "192.168.31.5:8080",
+        "url": "http://192.168.137.209:8080/video",
+        "ip": "192.168.137.209:8080",
         "enabled": True
     },
 }
@@ -47,11 +47,11 @@ PORT = 5000
 # YOLO Inference Parameters
 MODEL_PATH = "models/yolo11n.pt"
 CONFIDENCE = 0.40
-IMG_SIZE = 640
+IMG_SIZE = 480
 
 # Zone Risk Safety Thresholds
 # Normal / Safe : <= 3 People
 # Warning       : > 3 People and <= 7 People
 # Critical Alert: > 7 People
-THRESHOLD_SAFE = 40
-THRESHOLD_CRITICAL = 80
+THRESHOLD_SAFE = 3
+THRESHOLD_CRITICAL = 7

@@ -26,6 +26,10 @@ from core.state import (
 )
 from core.risk_engine import classify_zone_risk
 from core.camera import generate_frames, generate_offline_frame, IPCameraCapture
+from core.database import init_db
+
+# Initialize SQLite tables on application startup
+init_db()
 
 
 def create_app():

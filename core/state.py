@@ -16,8 +16,14 @@ from config import (
     THRESHOLD_CRITICAL
 )
 
-# Active runtime camera definitions
-current_cameras = {k: dict(v) for k, v in CAMERAS.items()}
+# Active runtime camera definitions (loads from SQLite or config.py)
+try:
+    from core.database import get_all_cameras
+    _db_cams = get_all_cameras()
+    current_cameras = _db_cams if _db_cams else {k: dict(v) for k, v in CAMERAS.items()}
+except Exception:
+    current_cameras = {k: dict(v) for k, v in CAMERAS.items()}
+
 
 # Safety thresholds & AI inference parameters
 current_safe_threshold = THRESHOLD_SAFE
@@ -117,6 +123,21 @@ def save_cameras_to_config():
                         pass
 
         print("[Config] Saved updated cameras to config.py successfully.")
+
+        # Sync to SQLite database as well
+        try:
+            from core.database import upsert_camera
+            for cid, cinfo in current_cameras.items():
+                upsert_camera(
+                    cid,
+                    cinfo.get("name", cid),
+                    cinfo.get("ip", ""),
+                    cinfo.get("url", ""),
+                    1 if cinfo.get("enabled", True) else 0
+                )
+        except Exception as db_err:
+            print(f"[Database] SQLite camera sync note: {db_err}")
+
         return True
     except Exception as e:
         print(f"[Config] Error writing cameras to config.py: {e}")

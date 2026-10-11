@@ -1,40 +1,16 @@
 // ==================================================
 // CROWD SAFETY MONITOR - CLIENT JAVASCRIPT ENGINE
-// Real-Time Digital Clock, Multi-Camera Polling,
-// Red Border Alert Logic & Event Log Table Renderer
+// Real-Time Digital Clock, Dynamic Multi-Camera Grid,
+// Risk Engine & Dynamic Event Log Renderer
 // ==================================================
 
 // DOM Cache - Clock
 const digitalClockTime = document.getElementById("digitalClockTime");
 const digitalClockDate = document.getElementById("digitalClockDate");
 
-// DOM Cache - Camera 1
-const cam1Card = document.getElementById("cam1Card");
-const cam1Count = document.getElementById("cam1Count");
-const cam1ZoneBadge = document.getElementById("cam1ZoneBadge");
-const cam1StatusBadge = document.getElementById("cam1StatusBadge");
-const cam1ZoneRiskText = document.getElementById("cam1ZoneRiskText");
-const cam1PeopleIconBox = document.getElementById("cam1PeopleIconBox");
-const cam1ZoneIconBox = document.getElementById("cam1ZoneIconBox");
-const cam1OverlayTimestamp = document.getElementById("cam1OverlayTimestamp");
-const cam1IpText = document.getElementById("cam1IpText");
-const sideCam1Ip = document.getElementById("sideCam1Ip");
-const sideCam1Status = document.getElementById("sideCam1Status");
-const cam1LivePill = document.getElementById("cam1LivePill");
-
-// DOM Cache - Camera 2
-const cam2Card = document.getElementById("cam2Card");
-const cam2Count = document.getElementById("cam2Count");
-const cam2ZoneBadge = document.getElementById("cam2ZoneBadge");
-const cam2StatusBadge = document.getElementById("cam2StatusBadge");
-const cam2ZoneRiskText = document.getElementById("cam2ZoneRiskText");
-const cam2PeopleIconBox = document.getElementById("cam2PeopleIconBox");
-const cam2ZoneIconBox = document.getElementById("cam2ZoneIconBox");
-const cam2OverlayTimestamp = document.getElementById("cam2OverlayTimestamp");
-const cam2IpText = document.getElementById("cam2IpText");
-const sideCam2Ip = document.getElementById("sideCam2Ip");
-const sideCam2Status = document.getElementById("sideCam2Status");
-const cam2LivePill = document.getElementById("cam2LivePill");
+// DOM Cache - Dynamic Camera Grid & Lists
+const cameraFeedsGrid = document.getElementById("cameraFeedsGrid");
+const activeCamsList = document.getElementById("activeCamsList");
 
 // DOM Cache - Event Log Table
 const eventLogTableBody = document.getElementById("eventLogTableBody");
@@ -49,13 +25,20 @@ const sysStatusTitle = document.getElementById("sysStatusTitle");
 const sysStatusSub = document.getElementById("sysStatusSub");
 
 // State
-let lastAlertStates = {
-    cam1: null,
-    cam2: null
-};
+let lastAlertStates = {};
 let currentSafeThreshold = 3;
 let currentCriticalThreshold = 7;
 let thresholdsInitialized = false;
+
+function escapeHtml(text) {
+    if (!text) return "";
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 function updateSidebarThresholdDisplay(safe, crit) {
     if (sidebarSafeCount) sidebarSafeCount.textContent = `≤ ${safe} People`;
@@ -105,8 +88,10 @@ function updateClock() {
     if (digitalClockTime) digitalClockTime.textContent = formattedTime;
     if (digitalClockDate) digitalClockDate.textContent = formattedDate;
 
-    if (cam1OverlayTimestamp) cam1OverlayTimestamp.textContent = streamTimestamp;
-    if (cam2OverlayTimestamp) cam2OverlayTimestamp.textContent = streamTimestamp;
+    // Update timestamp across all active camera feeds dynamically
+    document.querySelectorAll(".video-timestamp-stamp").forEach(el => {
+        el.textContent = streamTimestamp;
+    });
 }
 
 
@@ -136,9 +121,9 @@ function addEventLogRow(cameraName, eventName, detailsText, isAlert = false, isS
 
     tr.innerHTML = `
         <td class="log-time-cell">${timeString}</td>
-        <td><span class="${camBadgeClass}">${camIcon} ${cameraName}</span></td>
-        <td><div class="log-event-cell ${isAlert ? 'red' : 'blue'}">${eventIcon} ${eventName}</div></td>
-        <td class="log-details-cell ${isAlert ? 'red' : ''}">${detailsText}</td>
+        <td><span class="${camBadgeClass}">${camIcon} ${escapeHtml(cameraName)}</span></td>
+        <td><div class="log-event-cell ${isAlert ? 'red' : 'blue'}">${eventIcon} ${escapeHtml(eventName)}</div></td>
+        <td class="log-details-cell ${isAlert ? 'red' : ''}">${escapeHtml(detailsText)}</td>
     `;
 
     // Insert at the top of the event log table
@@ -158,20 +143,148 @@ function clearLogs() {
 
 
 // ==================================================
+// DYNAMIC DOM BUILDERS (SUPPORTS 1 TO 5+ CAMERAS)
+// ==================================================
+
+function createCameraCardElement(camId, camInfo) {
+    const card = document.createElement("div");
+    card.className = "camera-card";
+    card.id = `camCard_${camId}`;
+    card.setAttribute("data-cam-id", camId);
+
+    const safeName = escapeHtml(camInfo.name || camId);
+    const safeIp = escapeHtml(camInfo.ip || "N/A");
+
+    card.innerHTML = `
+        <div class="cam-card-topbar">
+            <div class="cam-identity">
+                <div class="cam-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="cam-name" id="camName_${camId}">${safeName}</h2>
+                    <span class="cam-endpoint" id="camIpText_${camId}">${safeIp}</span>
+                </div>
+            </div>
+
+            <div class="cam-top-badges">
+                <button class="btn-change-ip" onclick="openChangeIpModal('${camId}', '${safeName.replace(/'/g, "\\'")}')" title="Configure Camera IP" style="margin-right: 6px; padding: 4px 8px; font-size: 11px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    ⚙️ IP
+                </button>
+                <span class="badge-zone badge-safe" id="camZoneBadge_${camId}">SAFE ZONE</span>
+                <span class="badge-conn badge-offline" id="camStatusBadge_${camId}">● OFFLINE</span>
+            </div>
+        </div>
+
+        <div class="cam-video-box">
+            <img src="/video_feed/${camId}" class="cam-stream-img" id="camFeedImg_${camId}" alt="${safeName} Live Stream">
+            <div class="video-overlay-bar">
+                <span class="live-status-pill">
+                    <span class="live-indicator-dot"></span> LIVE REC
+                </span>
+                <span class="video-timestamp-stamp" id="camTimestamp_${camId}">--:--:--</span>
+            </div>
+        </div>
+
+        <div class="cam-stats-footer">
+            <div class="stat-cell">
+                <div class="stat-icon-wrapper blue" id="camPeopleIcon_${camId}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="stat-meta">
+                    <span class="stat-label">PEOPLE COUNT</span>
+                    <span class="stat-number" id="camCount_${camId}">0</span>
+                </div>
+            </div>
+
+            <div class="stat-cell">
+                <div class="stat-icon-wrapper blue" id="camZoneIcon_${camId}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+                <div class="stat-meta">
+                    <span class="stat-label">ZONE RISK</span>
+                    <span class="stat-risk-label val-safe" id="camZoneRisk_${camId}">SAFE</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    return card;
+}
+
+function createSidebarCameraItem(camId, camInfo) {
+    const item = document.createElement("div");
+    item.className = "cam-feed-item";
+    item.id = `sideCamItem_${camId}`;
+    item.setAttribute("data-cam-id", camId);
+
+    const safeName = escapeHtml(camInfo.name || camId);
+    const safeIp = escapeHtml(camInfo.ip || "N/A");
+
+    item.innerHTML = `
+        <div class="feed-item-left">
+            <div class="feed-mini-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+            </div>
+            <div class="feed-info">
+                <strong class="feed-title" id="sideCamTitle_${camId}">${safeName}</strong>
+                <span class="feed-sub" id="sideCamIp_${camId}">${safeIp}</span>
+            </div>
+        </div>
+        <span class="badge-conn badge-offline" id="sideCamStatus_${camId}">● OFFLINE</span>
+    `;
+
+    return item;
+}
+
+
+// ==================================================
 // UPDATE INDIVIDUAL CAMERA FEED UI
 // ==================================================
 
-function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeElem, statusBadgeElem, zoneRiskElem, peopleIconElem, zoneIconElem, sideStatusElem, sideIpElem, ipTextElem) {
+function updateCameraFeedCard(camKey, camInfo) {
     if (!camInfo) return;
+
+    const cardElem = document.getElementById(`camCard_${camKey}`);
+    const countElem = document.getElementById(`camCount_${camKey}`);
+    const zoneBadgeElem = document.getElementById(`camZoneBadge_${camKey}`);
+    const statusBadgeElem = document.getElementById(`camStatusBadge_${camKey}`);
+    const zoneRiskElem = document.getElementById(`camZoneRisk_${camKey}`);
+    const peopleIconElem = document.getElementById(`camPeopleIcon_${camKey}`);
+    const zoneIconElem = document.getElementById(`camZoneIcon_${camKey}`);
+    const sideStatusElem = document.getElementById(`sideCamStatus_${camKey}`);
+    const sideIpElem = document.getElementById(`sideCamIp_${camKey}`);
+    const ipTextElem = document.getElementById(`camIpText_${camKey}`);
+    const nameElem = document.getElementById(`camName_${camKey}`);
+    const sideTitleElem = document.getElementById(`sideCamTitle_${camKey}`);
 
     const count = camInfo.count || 0;
     const isConnected = !!camInfo.connected;
-    const camName = camInfo.name || (camKey === "cam1" ? "Camera 1" : "Camera 2");
+    const camName = camInfo.name || camKey;
 
-    // 1. IP endpoint display
+    // 1. Name & IP endpoint display
+    if (nameElem && camInfo.name && nameElem.textContent !== camInfo.name) {
+        nameElem.textContent = camInfo.name;
+    }
+    if (sideTitleElem && camInfo.name && sideTitleElem.textContent !== camInfo.name) {
+        sideTitleElem.textContent = camInfo.name;
+    }
     if (camInfo.ip) {
-        if (ipTextElem) ipTextElem.textContent = camInfo.ip;
-        if (sideIpElem) sideIpElem.textContent = camInfo.ip;
+        if (ipTextElem && ipTextElem.textContent !== camInfo.ip) ipTextElem.textContent = camInfo.ip;
+        if (sideIpElem && sideIpElem.textContent !== camInfo.ip) sideIpElem.textContent = camInfo.ip;
     }
 
     // 2. Individual People Count
@@ -195,7 +308,6 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
     // 4. Dynamic Risk Classification & Alert Logic based on configured thresholds
     const isCritical = camInfo.risk_level === "CRITICAL" || count > currentCriticalThreshold;
     const isWarning = !isCritical && (camInfo.risk_level === "WARNING" || count > currentSafeThreshold);
-    const hasAlert = isCritical || isWarning;
 
     if (isCritical) {
         // Red glowing border on camera box
@@ -262,13 +374,95 @@ function updateCameraFeedCard(camKey, camInfo, cardElem, countElem, zoneBadgeEle
         if (peopleIconElem) peopleIconElem.className = "stat-icon-wrapper blue";
         if (zoneIconElem) zoneIconElem.className = "stat-icon-wrapper blue";
 
-        if (lastAlertStates[camKey] !== "SAFE" && lastAlertStates[camKey] !== null) {
+        if (lastAlertStates[camKey] !== "SAFE" && lastAlertStates[camKey] !== null && lastAlertStates[camKey] !== undefined) {
             addEventLogRow(camName, "Normal crowd density", `${count} people detected (Zone: SAFE ≤${currentSafeThreshold})`, false);
             lastAlertStates[camKey] = "SAFE";
-        } else if (lastAlertStates[camKey] === null) {
+        } else if (!lastAlertStates[camKey]) {
             lastAlertStates[camKey] = "SAFE";
         }
     }
+}
+
+
+// ==================================================
+// DYNAMIC MULTI-CAMERA SYNCHRONIZER
+// ==================================================
+
+function syncCamerasGrid(cameras) {
+    if (!cameraFeedsGrid || !activeCamsList) return;
+
+    const camIds = Object.keys(cameras);
+
+    // Fallback if 0 cameras are registered
+    if (camIds.length === 0) {
+        if (!document.getElementById("emptyCamerasNotice")) {
+            cameraFeedsGrid.innerHTML = `
+                <div id="emptyCamerasNotice" style="grid-column: 1 / -1; background: var(--bg-card); border: 1px dashed var(--border-card); border-radius: 14px; padding: 48px 24px; text-align: center; color: var(--text-secondary);">
+                    <div style="font-size: 38px; margin-bottom: 12px;">📷</div>
+                    <h3 style="font-size: 18px; color: #fff; margin-bottom: 8px;">No Camera Streams Registered</h3>
+                    <p style="font-size: 13px; max-width: 440px; margin: 0 auto 18px;">
+                        Add your mobile IP webcam or RTSP streams in the Admin Portal to start real-time multi-camera crowd monitoring.
+                    </p>
+                    <a href="/admin" style="display: inline-block; padding: 8px 18px; background: var(--blue-primary); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">
+                        👑 Open Admin Portal
+                    </a>
+                </div>
+            `;
+            activeCamsList.innerHTML = `
+                <div id="emptySidebarNotice" style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 12px;">
+                    No active cameras
+                </div>
+            `;
+        }
+        return;
+    }
+
+    // Remove empty notice if present
+    const emptyNotice = document.getElementById("emptyCamerasNotice");
+    if (emptyNotice) emptyNotice.remove();
+    const emptySide = document.getElementById("emptySidebarNotice");
+    if (emptySide) emptySide.remove();
+
+    // 1. Add / Update each active camera in the feeds grid & sidebar
+    camIds.forEach(camId => {
+        const camInfo = cameras[camId];
+
+        // Ensure Card in main grid
+        if (!document.getElementById(`camCard_${camId}`)) {
+            const card = createCameraCardElement(camId, camInfo);
+            cameraFeedsGrid.appendChild(card);
+            addEventLogRow(camInfo.name || camId, "Camera stream connected", `Stream initialized at ${camInfo.ip || "stream"}`, false, true);
+        }
+
+        // Ensure Item in sidebar
+        if (!document.getElementById(`sideCamItem_${camId}`)) {
+            const sideItem = createSidebarCameraItem(camId, camInfo);
+            activeCamsList.appendChild(sideItem);
+        }
+
+        // Update stats and live telemetry
+        updateCameraFeedCard(camId, camInfo);
+    });
+
+    // 2. Remove deleted cameras from main grid
+    const existingCards = cameraFeedsGrid.querySelectorAll(".camera-card");
+    existingCards.forEach(card => {
+        const cid = card.getAttribute("data-cam-id");
+        if (cid && !cameras[cid]) {
+            card.remove();
+            delete lastAlertStates[cid];
+            addEventLogRow(cid, "Camera stream removed", `Camera ${cid} disconnected and removed from dashboard`, false, true);
+        }
+    });
+
+    // 3. Remove deleted cameras from sidebar
+    const existingSideItems = activeCamsList.querySelectorAll(".cam-feed-item");
+    existingSideItems.forEach(item => {
+        const cid = item.getAttribute("data-cam-id");
+        if (cid && !cameras[cid]) {
+            item.remove();
+        }
+    });
 }
 
 
@@ -307,43 +501,8 @@ async function fetchPeopleData() {
 
         updateSystemStatus(data.status);
 
-        const cameras = data.cameras || {};
-
-        // Update Camera 1
-        if (cameras.cam1) {
-            updateCameraFeedCard(
-                "cam1",
-                cameras.cam1,
-                cam1Card,
-                cam1Count,
-                cam1ZoneBadge,
-                cam1StatusBadge,
-                cam1ZoneRiskText,
-                cam1PeopleIconBox,
-                cam1ZoneIconBox,
-                sideCam1Status,
-                sideCam1Ip,
-                cam1IpText
-            );
-        }
-
-        // Update Camera 2
-        if (cameras.cam2) {
-            updateCameraFeedCard(
-                "cam2",
-                cameras.cam2,
-                cam2Card,
-                cam2Count,
-                cam2ZoneBadge,
-                cam2StatusBadge,
-                cam2ZoneRiskText,
-                cam2PeopleIconBox,
-                cam2ZoneIconBox,
-                sideCam2Status,
-                sideCam2Ip,
-                cam2IpText
-            );
-        }
+        // Dynamically synchronize all camera feeds (1 to 5+ cameras)
+        syncCamerasGrid(data.cameras || {});
 
     } catch (err) {
         console.error("Error fetching people analytics:", err);
@@ -363,7 +522,7 @@ function initializeSystem() {
     // 2. Pre-populate System Startup Events matching screenshot
     addEventLogRow("System", "Zone risk rules active", "Dynamic safety thresholds enabled", false, true);
     addEventLogRow("System", "YOLO object tracking enabled", "Real-time person detection and tracking", false, true);
-    addEventLogRow("System", "Density heatmap overlay active", "Gaussian JET colormap enabled for both cameras", false, true);
+    addEventLogRow("System", "Density heatmap overlay active", "Gaussian JET colormap enabled for multi-camera feeds", false, true);
 
     // 3. Initial API Fetch
     fetchPeopleData();
@@ -399,9 +558,9 @@ function openChangeIpModal(camId, defaultName) {
     nameInput.value = defaultName;
 
     // Pre-fill with current displayed IP
-    const currentIpElem = document.getElementById(`${camId}IpText`);
+    const currentIpElem = document.getElementById(`camIpText_${camId}`);
     const currentIp = currentIpElem ? currentIpElem.textContent.trim() : "";
-    endpointInput.value = currentIp;
+    endpointInput.value = (currentIp && currentIp !== "N/A") ? currentIp : "";
 
     modal.style.display = "flex";
     setTimeout(() => endpointInput.focus(), 50);
@@ -450,17 +609,23 @@ async function submitChangeIp(e) {
             const updatedCam = data.camera;
 
             // 1. Force refresh the MJPEG image element
-            const feedImg = document.getElementById(camId === "cam1" ? "cameraFeed1" : "cameraFeed2");
+            const feedImg = document.getElementById(`camFeedImg_${camId}`);
             if (feedImg) {
                 feedImg.src = `/video_feed/${camId}?t=${Date.now()}`;
             }
 
             // 2. Update IP labels on dashboard
-            const ipLabel = document.getElementById(`${camId}IpText`);
+            const ipLabel = document.getElementById(`camIpText_${camId}`);
             if (ipLabel) ipLabel.textContent = updatedCam.ip;
 
-            const sideIp = document.getElementById(camId === "cam1" ? "sideCam1Ip" : "sideCam2Ip");
+            const sideIp = document.getElementById(`sideCamIp_${camId}`);
             if (sideIp) sideIp.textContent = updatedCam.ip;
+
+            const nameElem = document.getElementById(`camName_${camId}`);
+            if (nameElem && updatedCam.name) nameElem.textContent = updatedCam.name;
+
+            const sideTitle = document.getElementById(`sideCamTitle_${camId}`);
+            if (sideTitle && updatedCam.name) sideTitle.textContent = updatedCam.name;
 
             // 3. Add to event log
             addEventLogRow(
@@ -490,4 +655,3 @@ async function submitChangeIp(e) {
 
 // Start
 document.addEventListener("DOMContentLoaded", initializeSystem);
-

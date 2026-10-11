@@ -227,6 +227,11 @@ def admin_delete_camera():
             state.camera_connected.pop(cam_id, None)
             state.active_track_ids.pop(cam_id, None)
         save_cameras_to_config()
+        try:
+            from core.database import delete_camera_from_db
+            delete_camera_from_db(cam_id)
+        except Exception:
+            pass
         return jsonify({"success": True})
 
     return jsonify({"success": False, "error": "Camera not found."}), 404
@@ -278,3 +283,26 @@ def admin_update_ai():
             return jsonify({"success": False, "error": "Invalid confidence value."}), 400
 
     return jsonify({"success": True, "confidence": state.current_confidence})
+
+
+@api_bp.route("/api/admin/incidents")
+@admin_required
+def admin_incidents_list():
+    """Returns recorded crowd surge incidents from SQLite."""
+    try:
+        from core.database import get_recent_incidents
+        return jsonify(get_recent_incidents(50))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api_bp.route("/api/admin/logins")
+@admin_required
+def admin_logins_list():
+    """Returns user login audit history from SQLite."""
+    try:
+        from core.database import get_login_history
+        return jsonify(get_login_history(50))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

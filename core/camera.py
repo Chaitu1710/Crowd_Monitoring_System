@@ -245,6 +245,7 @@ def ai_camera_loop(cam_id):
     cam_name = cam_config.get("name", cam_id)
     cam_url = cam_config.get("url", "")
     current_active_url = cam_url
+    last_incident_log_time = 0
 
     print(f"[{cam_name}] Worker thread started for URL: {cam_url}")
     cam_reader = IPCameraCapture(cam_url)
@@ -388,6 +389,14 @@ def ai_camera_loop(cam_id):
                 (0, 0, 255),
                 2
             )
+            # Record surge incident to SQLite (throttled to once per 30 seconds)
+            if time.time() - last_incident_log_time > 30:
+                try:
+                    from core.database import log_incident
+                    log_incident(cam_id, cam_name, cam_count, "CRITICAL", "Overcrowding Alert Dispatched")
+                    last_incident_log_time = time.time()
+                except Exception:
+                    pass
         elif cam_count > state.current_safe_threshold:
             cv2.rectangle(frame, (0, 0), (frame.shape[1] - 1, frame.shape[0] - 1), (0, 140, 255), 6)
             cv2.putText(
