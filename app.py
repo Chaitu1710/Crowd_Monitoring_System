@@ -36,6 +36,7 @@ def create_app():
     """Application factory initializing Flask app and registering blueprints."""
     app_instance = Flask(__name__, template_folder="templates", static_folder="static")
     app_instance.secret_key = SECRET_KEY
+    app_instance.config["TEMPLATES_AUTO_RELOAD"] = True
 
     # Register modular blueprints
     app_instance.register_blueprint(auth_bp)

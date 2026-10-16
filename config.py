@@ -26,16 +26,23 @@ SECRET_KEY = "crowd-safety-monitoring-secret-key-2026"
 CAMERAS = {
     "cam1": {
         "id": "cam1",
-        "name": "Camera 1",
-        "url": "http://100.80.141.31:8080/video",
-        "ip": "100.80.141.31:8080",
+        "name": "617-A",
+        "url": "http://192.168.18.174:8080/video",
+        "ip": "192.168.18.174:8080",
         "enabled": True
     },
     "cam2": {
         "id": "cam2",
         "name": "Camera 2",
-        "url": "http://192.168.137.209:8080/video",
-        "ip": "192.168.137.209:8080",
+        "url": "http://192.168.137.133:8080/video",
+        "ip": "192.168.137.133:8080",
+        "enabled": True
+    },
+    "cam3": {
+        "id": "cam3",
+        "name": "Entry Gate",
+        "url": "http://192.168.41.170:8080/video",
+        "ip": "192.168.41.170:8080",
         "enabled": True
     },
 }

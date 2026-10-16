@@ -69,35 +69,8 @@
                 </button>
             </form>
 
-            <!-- Quick Autofill Helper -->
-            <div class="credentials-hint-box">
-                <span class="hint-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                    Select Role (Click to Autofill)
-                </span>
-                <div class="hint-cards-grid">
-                    <div class="hint-item" onclick="fillCredentials('admin', 'admin123')">
-                        <span class="hint-badge badge-admin">👑 Admin</span>
-                        <span class="hint-cred">admin / admin123</span>
-                    </div>
-                    <div class="hint-item" onclick="fillCredentials('operator', 'operator123')">
-                        <span class="hint-badge badge-operator">👮 Operator</span>
-                        <span class="hint-cred">operator / operator123</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
-
-    <script>
-        function fillCredentials(u, p) {
-            document.getElementById('username').value = u;
-            document.getElementById('password').value = p;
-        }
-    </script>
 </body>
 
 </html>
